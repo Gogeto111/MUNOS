@@ -11,6 +11,8 @@ export default function SignUpPage() {
 
   return (
     <SignUp
+      routing="path"
+      path="/sign-up"
       appearance={{
         elements: {
           card: "shadow-xl shadow-black/[0.05]",
