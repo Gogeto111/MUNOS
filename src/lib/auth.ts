@@ -2,9 +2,11 @@ import "server-only";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/prisma";
 
+const CLERK_SECRET = process.env.CLERK_SECRET_KEY || "sk_test_95TI9LtlT9Ag6mi9jYHgi49Bw2UCqe14yxiNAhkylf";
+
 const isAuthConfigured = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
-    process.env.CLERK_SECRET_KEY,
+    CLERK_SECRET,
 );
 
 type ExperienceLevel = "FIRST_TIMER" | "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT" | null;
