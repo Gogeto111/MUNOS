@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: munos-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: munos
+      POSTGRES_PASSWORD: munos
+      POSTGRES_DB: munos
+    ports:
+      - "5432:5432"
+    volumes:
+      - munos_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U munos -d munos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  munos_pgdata:

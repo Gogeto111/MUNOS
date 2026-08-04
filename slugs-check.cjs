@@ -1,0 +1,1 @@
+const { PrismaClient } = require("./node_modules/.prisma/client"); const p = new PrismaClient(); p.conference.findMany({ select: { slug: true, name: true, published: true } }).then((r) => { console.log(JSON.stringify(r, null, 2)); return p.$disconnect(); }).catch((e) => { console.error(e.message); process.exit(1); });

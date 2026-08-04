@@ -1,0 +1,922 @@
+// MUNOS — Phase 1 database schema
+// Normalized relational model designed to scale with future phases
+// (AI, conference discovery, organizer dashboards, committee workspaces, networking).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  DELEGATE
+  ORGANIZER
+  MODERATOR
+  ADMIN
+}
+
+enum ExperienceLevel {
+  FIRST_TIMER
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum CertificateCategory {
+  PARTICIPATION
+  AWARD
+  BEST_DELEGATE
+  HONORABLE_MENTION
+  SPECIAL_MENTION
+  VERBAL_COMMENDATION
+  RESEARCH_PAPER
+  OTHER
+}
+
+enum SocialPlatform {
+  LINKEDIN
+  TWITTER
+  INSTAGRAM
+  GITHUB
+  YOUTUBE
+  WEBSITE
+  OTHER
+}
+
+enum NotificationType {
+  SYSTEM
+  ACHIEVEMENT
+  EVENT
+  REMINDER
+}
+
+enum ActivityType {
+  ACCOUNT_CREATED
+  PROFILE_UPDATED
+  PROFILE_COMPLETED
+  MUN_PROFILE_UPDATED
+  AWARD_ADDED
+  AWARD_REMOVED
+  CERTIFICATE_UPLOADED
+  CERTIFICATE_DELETED
+  COMMITTEE_ADDED
+  COMMITTEE_REMOVED
+  COUNTRY_ADDED
+  COUNTRY_REMOVED
+  SOCIAL_LINK_UPDATED
+  PORTFOLIO_UPDATED
+  SETTINGS_UPDATED
+}
+
+enum ConferenceFormat {
+  ONLINE
+  OFFLINE
+  HYBRID
+}
+
+enum ReminderType {
+  REGISTRATION_DEADLINE
+  COUNTRY_ALLOCATION
+  CONFERENCE_STARTS
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum PositionPaperStatus {
+  DRAFT
+  RESEARCH
+  COMPLETE
+}
+
+enum ResolutionStatus {
+  DRAFT
+  SUBMITTED
+  PASSED
+  FAILED
+}
+
+enum AiSourceType {
+  USER
+  CORPUS
+  CRAWLED
+  LIVE
+}
+
+// ---------------------------------------------------------------------------
+// User & related entities
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String   @id @default(cuid())
+  clerkId       String   @unique
+  email         String   @unique
+  firstName     String?
+  lastName      String?
+  username      String?  @unique
+  phoneNumber   String?
+  avatarUrl     String?
+  bio           String?  @db.VarChar(1000)
+  school        String?
+  university    String?
+  grade         String?
+  city          String?
+  state         String?
+  country       String?
+  interests     String[] @default([])
+  role          Role     @default(DELEGATE)
+  emailVerified Boolean  @default(false)
+
+  munProfile    MunProfile?
+  settings      UserSettings?
+  awards        Award[]
+  certificates  Certificate[]
+  committees    Committee[]
+  countries     CountryRepresented[]
+  socialLinks   SocialLink[]
+  notifications Notification[]
+  activities    Activity[]
+  bookmarks     Bookmark[]
+  reviews       Review[]
+  reminders     Reminder[]
+  workspaces Workspace[]
+  simulations CommitteeSimulation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
+  @@index([country])
+  @@index([email])
+  @@index([username])
+}
+
+model MunProfile {
+  id              String          @id @default(cuid())
+  userId          String          @unique
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experienceLevel ExperienceLevel @default(BEGINNER)
+  munsAttended    Int             @default(0)
+  awardsWon       Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model Award {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  issuer      String?
+  category    String?
+  year        Int?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Certificate {
+  id          String              @id @default(cuid())
+  userId      String
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  issuer      String?
+  category    CertificateCategory @default(OTHER)
+  issueYear   Int?
+  fileName    String
+  mimeType    String
+  sizeBytes   Int
+  fileUrl     String
+  fileKey     String
+  description String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([category])
+}
+
+model Committee {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  role           String
+  conferenceName String?
+  year           Int?
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model CountryRepresented {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  country        String
+  conferenceName String?
+  year           Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model SocialLink {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform  SocialPlatform
+  url       String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([userId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType @default(SYSTEM)
+  title     String
+  body      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId, read])
+}
+
+model Activity {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      ActivityType
+  message   String
+  metadata  Json?
+  createdAt DateTime     @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model UserSettings {
+  id                    String  @id @default(cuid())
+  userId                String  @unique
+  user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme                 String  @default("system")
+  notificationsEnabled  Boolean @default(true)
+  emailNotifications    Boolean @default(true)
+  certificateUploads    Boolean @default(true)
+  newFeatures           Boolean @default(true)
+  eventReminders        Boolean @default(true)
+  profilePublic         Boolean @default(true)
+  showAwards            Boolean @default(true)
+  showCertificates      Boolean @default(true)
+  showStats             Boolean @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Phase 2 — Global MUN Discovery Platform
+// ---------------------------------------------------------------------------
+
+model Organizer {
+  id          String        @id @default(cuid())
+  name        String
+  description String?       @db.Text
+  school      String?
+  university  String?
+  website     String?
+  email       String?
+  instagram   String?
+  logoUrl     String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  conferences Conference[]
+
+  @@index([name])
+}
+
+model Venue {
+  id           String      @id @default(cuid())
+  name         String
+  address      String?
+  city         String
+  state        String?
+  country      String
+  latitude     Float?
+  longitude    Float?
+  mapsUrl      String?
+  conferenceId String      @unique
+  conference   Conference  @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([city])
+  @@index([country])
+}
+
+model Conference {
+  id          String            @id @default(cuid())
+  slug        String            @unique
+  name        String
+  tagline     String?
+  description String            @db.Text
+  theme       String?
+  format      ConferenceFormat  @default(OFFLINE)
+  difficulty  ExperienceLevel   @default(BEGINNER)
+
+  startDate           DateTime
+  endDate             DateTime
+  registrationOpen    Boolean          @default(true)
+  externalDelegates   Boolean          @default(true)
+  fee                 Float            @default(0)
+  currency            String           @default("USD")
+  registrationDeadline DateTime?
+  capacity            Int?
+
+  website   String?
+  instagram String?
+  email     String?
+  school    String?
+  university String?
+  city      String
+  state     String?
+  country   String
+  logoUrl   String?
+  bannerUrl String?
+  featured  Boolean @default(false)
+  published Boolean @default(true)
+
+  organizerId String?
+  organizer   Organizer? @relation(fields: [organizerId], references: [id], onDelete: SetNull)
+
+  venue       Venue?
+  committees  ConferenceCommittee[]
+  agenda      AgendaItem[]
+  brochures   Brochure[]
+  gallery     GalleryImage[]
+  socialLinks ConferenceSocialLink[]
+  reviews     Review[]
+  bookmarks   Bookmark[]
+  reminders   Reminder[]
+  faqs        ConferenceFaq[]
+  secretariat Secretariat[]
+  awards      ConferenceAward[]
+  workspaces  Workspace[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([country])
+  @@index([city])
+  @@index([state])
+  @@index([school])
+  @@index([university])
+  @@index([format])
+  @@index([difficulty])
+  @@index([startDate])
+  @@index([published, featured])
+}
+
+model ConferenceCommittee {
+  id           String             @id @default(cuid())
+  conferenceId String
+  conference   Conference         @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  name         String
+  topic        String?
+  description  String?            @db.Text
+  difficulty   ExperienceLevel    @default(INTERMEDIATE)
+  maxDelegates Int?
+  countryMatrix CountryMatrixEntry[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([conferenceId])
+  @@index([name])
+}
+
+model CountryMatrixEntry {
+  id          String                @id @default(cuid())
+  committeeId String
+  committee   ConferenceCommittee   @relation(fields: [committeeId], references: [id], onDelete: Cascade)
+  country     String
+  seats       Int                   @default(1)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@index([committeeId])
+}
+
+model AgendaItem {
+  id           String     @id @default(cuid())
+  conferenceId String
+  conference   Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?    @db.Text
+  startAt      DateTime
+  endAt        DateTime?
+  sortOrder    Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([conferenceId])
+}
+
+model ConferenceSocialLink {
+  id           String     @id @default(cuid())
+  conferenceId String
+  conference   Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  platform     SocialPlatform
+  url          String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([conferenceId])
+}
+
+model Brochure {
+  id           String     @id @default(cuid())
+  conferenceId String
+  conference   Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  title        String?
+  fileName     String
+  mimeType     String
+  sizeBytes    Int
+  fileUrl      String
+  fileKey      String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([conferenceId])
+}
+
+model GalleryImage {
+  id           String     @id @default(cuid())
+  conferenceId String
+  conference   Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  url          String
+  alt          String?
+  caption      String?
+  sortOrder    Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([conferenceId])
+}
+
+model ConferenceAward {
+  id           String     @id @default(cuid())
+  conferenceId String
+  conference   Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  sortOrder    Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([conferenceId])
+}
+
+model ConferenceFaq {
+  id           String     @id @default(cuid())
+  conferenceId String
+  conference   Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  question     String
+  answer       String     @db.Text
+  sortOrder    Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([conferenceId])
+}
+
+model Secretariat {
+  id           String     @id @default(cuid())
+  conferenceId String
+  conference   Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  name         String
+  role         String
+  photoUrl     String?
+  bio          String?
+  sortOrder    Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([conferenceId])
+}
+
+model Review {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conferenceId String
+  conference   Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  rating       Int
+  title        String?
+  body         String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([userId, conferenceId])
+  @@index([conferenceId])
+  @@index([rating])
+}
+
+model Bookmark {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conferenceId String
+  conference   Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@unique([userId, conferenceId])
+  @@index([userId])
+  @@index([conferenceId])
+}
+
+model Reminder {
+  id           String       @id @default(cuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conferenceId String
+  conference   Conference   @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  type         ReminderType
+  remindAt     DateTime
+  createdAt    DateTime     @default(now())
+
+  @@unique([userId, conferenceId, type])
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3 — Personal MUN Workspace
+// ---------------------------------------------------------------------------
+
+model Workspace {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conferenceId String?
+  conference   Conference? @relation(fields: [conferenceId], references: [id], onDelete: SetNull)
+  title        String
+  description  String?     @db.Text
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  folders     Folder[]
+  notes       Note[]
+  tasks       WorkspaceTask[]
+  timeline    TimelineEvent[]
+  attachments WorkspaceAttachment[]
+  committees  WorkspaceCommittee[]
+  resolutions Resolution[]
+  aiDocuments AiDocument[]
+  aiMemories  AiMemory[]
+  aiScores    AiScore[]
+
+  @@index([userId])
+  @@index([conferenceId])
+}
+
+model Folder {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  parentId    String?
+  parent      Folder?   @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  name        String
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  children Folder[] @relation("FolderTree")
+  notes    Note[]
+
+  @@index([workspaceId])
+}
+
+model Note {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  folderId    String?
+  folder      Folder?   @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  title       String
+  content     String    @db.Text
+  pinned      Boolean   @default(false)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId])
+  @@index([folderId])
+}
+
+model WorkspaceTask {
+  id          String       @id @default(cuid())
+  workspaceId String
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  title       String
+  description String?      @db.Text
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueAt       DateTime?
+  completedAt DateTime?
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([workspaceId, status])
+}
+
+model TimelineEvent {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  title       String
+  date        DateTime
+  description String?   @db.Text
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId])
+  @@index([date])
+}
+
+model WorkspaceAttachment {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  fileName    String
+  mimeType    String
+  sizeBytes   Int
+  fileUrl     String
+  fileKey     String
+  createdAt   DateTime  @default(now())
+
+  @@index([workspaceId])
+}
+
+model WorkspaceCommittee {
+  id          String     @id @default(cuid())
+  workspaceId String
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  topic       String?
+  country     String?
+  role        String     @default("DELEGATE")
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  positionPaper PositionPaper?
+  resolutions   Resolution[]
+
+  @@index([workspaceId])
+}
+
+model PositionPaper {
+  id          String               @id @default(cuid())
+  committeeId String               @unique
+  committee   WorkspaceCommittee   @relation(fields: [committeeId], references: [id], onDelete: Cascade)
+  title       String?
+  content     String               @db.Text
+  status      PositionPaperStatus  @default(DRAFT)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model Resolution {
+  id          String     @id @default(cuid())
+  workspaceId String
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  committeeId String?
+  committee   WorkspaceCommittee? @relation(fields: [committeeId], references: [id], onDelete: SetNull)
+  title       String
+  body        String     @db.Text
+  status      ResolutionStatus @default(DRAFT)
+  sponsors    String[]   @default([])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([workspaceId])
+}
+
+// ---------------------------------------------------------------------------
+// Phase 5 — AI Research Engine (pgvector)
+// ---------------------------------------------------------------------------
+
+model AiDocument {
+  id          String       @id @default(cuid())
+  workspaceId String?
+  workspace   Workspace?   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  isCorpus    Boolean      @default(false)
+  sourceType  AiSourceType @default(USER)
+  title       String
+  source      String
+  status      String       @default("READY")
+  chunkCount  Int          @default(0)
+  fileKey     String?
+  fileUrl     String?
+  originUrl   String?
+  retrievedAt DateTime?
+  metadata    Json?
+  createdAt   DateTime     @default(now())
+
+  chunks AiChunk[]
+
+  @@index([workspaceId])
+  @@index([isCorpus])
+  @@index([sourceType])
+  @@index([workspaceId, sourceType])
+}
+
+model AiChunk {
+  id         String   @id @default(cuid())
+  documentId String
+  document   AiDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content    String   @db.Text
+  heading    String?
+  chunkIndex Int
+  embedding  Bytes?
+
+  @@index([documentId])
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6 — Coach profile memory + AI judge history
+// ---------------------------------------------------------------------------
+
+model AiMemory {
+  id          String   @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  category    String
+  content     String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([workspaceId, category])
+  @@index([workspaceId])
+}
+
+enum SimulationStatus {
+  SETUP
+  RUNNING
+  PAUSED
+  FINISHED
+}
+
+enum SimulationEventType {
+  SPEECH
+  POI_ASKED
+  POI_ANSWERED
+  MOTION
+  VOTE
+  CRISIS
+  AWARD
+  CHAIR_ANNOUNCEMENT
+}
+
+// ---------------------------------------------------------------------------
+// Phase 11 — AI Committee Simulator
+// ---------------------------------------------------------------------------
+
+model CommitteeSimulation {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  committeeName String
+  topic String?
+  country String?
+  userRole String @default("DELEGATE")
+
+  status SimulationStatus @default(SETUP)
+  currentSpeakerIndex Int @default(0)
+  speakersListJson Json? @default("[]")
+
+  startedAt DateTime?
+  endedAt DateTime?
+
+  totalSpeechCount Int @default(0)
+  totalPoiCount Int @default(0)
+  totalMotionCount Int @default(0)
+
+  awardDelegates String[] @default([])
+  awardBestDelegates String[] @default([])
+  awardOutstandingDelegates String[] @default([])
+
+  chairNotes Json? @default("[]")
+  speakingTimeLimitSec Int @default(90)
+  totalSpeakingTimeSec Int @default(0)
+  totalVoteCount Int @default(0)
+  delegateScores Json? @default("[]")
+
+  delegates SimulationDelegate[]
+  events SimulationEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model SimulationDelegate {
+  id String @id @default(cuid())
+  simulationId String
+  simulation CommitteeSimulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+
+  country String
+  countryFlag String? @default("🏳️")
+  isAi Boolean @default(true)
+  isChair Boolean @default(false)
+  isRapporteur Boolean @default(false)
+
+  displayName String
+  speakingStyle String?
+  policyStance String?
+
+  speakingCount Int @default(0)
+  poiCount Int @default(0)
+  motionCount Int @default(0)
+
+  award SimulationAward? @default(NONE)
+
+  events SimulationEvent[]
+
+  createdAt DateTime @default(now())
+
+  @@index([simulationId])
+}
+
+enum SimulationAward {
+  NONE
+  BEST_DELEGATE
+  OUTSTANDING_DELEGATE
+  HONORABLE_MENTION
+  VERBAL_COMMENDATION
+}
+
+model SimulationEvent {
+  id String @id @default(cuid())
+  simulationId String
+  simulation CommitteeSimulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+
+  delegateId String?
+  delegate SimulationDelegate? @relation(fields: [delegateId], references: [id], onDelete: SetNull)
+
+  type SimulationEventType
+  content String @db.Text
+  metadata Json? @default("{}")
+
+  speakingTimeSec Float?
+  poiTargetDelegateId String?
+  motionType String?
+  voteChoice String?
+
+  createdAt DateTime @default(now())
+
+  @@index([simulationId, type])
+  @@index([simulationId, createdAt])
+}
+
+model AiScore {
+  id String @id @default(cuid())
+  workspaceId String
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  feature String @default("debate")
+  transcript String? @db.Text
+  durationSec Float?
+  result Json
+  createdAt DateTime @default(now())
+
+  @@index([workspaceId])
+}
