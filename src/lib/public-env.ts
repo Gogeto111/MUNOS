@@ -26,8 +26,7 @@ export const publicEnv = result.success
   : ({} as z.infer<typeof publicSchema>);
 
 export const isAuthConfigured = Boolean(
-  publicEnv.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
-    process.env.CLERK_SECRET_KEY,
+  publicEnv.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
 );
 export const isStorageConfigured = Boolean(
   publicEnv.NEXT_PUBLIC_SUPABASE_URL &&

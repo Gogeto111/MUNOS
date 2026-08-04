@@ -1,7 +1,11 @@
 import "server-only";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { isAuthConfigured } from "@/lib/public-env";
 import { getDb } from "@/lib/prisma";
+
+const isAuthConfigured = Boolean(
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
+    process.env.CLERK_SECRET_KEY,
+);
 
 type ExperienceLevel = "FIRST_TIMER" | "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT" | null;
 

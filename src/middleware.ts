@@ -28,7 +28,7 @@ const clerk = clerkMiddleware(async (auth, req) => {
 
 export default function middleware(req: NextRequest, event: NextFetchEvent) {
   // Without Clerk keys (local demo mode) every route stays public.
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
     return NextResponse.next();
   }
   return clerk(req, event);

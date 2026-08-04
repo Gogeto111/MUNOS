@@ -7,6 +7,8 @@ import { ClerkThemedProvider } from "@/providers/clerk-provider";
 import { Toaster } from "@/components/shared/toaster";
 import "./globals.css";
 
+export const dynamic = "force-dynamic";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
