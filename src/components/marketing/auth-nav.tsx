@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { isAuthConfigured } from "@/lib/public-env";
 import { Button } from "@/components/ui/button";
