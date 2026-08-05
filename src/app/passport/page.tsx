@@ -4,6 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
+import { colorClasses } from "@/lib/colors";
+
+export const metadata = { title: "Passport | MUNOS" };
 
 export default async function PassportPage() {
   const user = await getCurrentUser();
@@ -91,7 +94,7 @@ export default async function PassportPage() {
             <Card key={stat.label}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className={`grid size-10 place-items-center rounded-lg bg-${stat.color}-500/10 text-${stat.color}-600`}>
+                  <div className={`grid size-10 place-items-center rounded-lg ${colorClasses(stat.color).bg} ${colorClasses(stat.color).text}`}>
                     <stat.icon className="size-5" />
                   </div>
                   <div>

@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { getDb } from "@/lib/prisma";
 import { isAuthConfigured } from "@/lib/public-env";
 import { isAiConfigured } from "@/lib/env";
+import { checkRateLimit, rateLimitKey } from "@/lib/rate-limit";
 import {
   syncLiveUnSources,
   syncOfficialSources,
@@ -11,6 +12,8 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const RATE_LIMIT = { max: 10, windowMs: 60_000 };
 
 const NOT_CONFIGURED_MESSAGE =
   "AI is not configured yet. Add GOOGLE_GENERATIVE_AI_API_KEY to your .env and restart the dev server.";
@@ -23,6 +26,23 @@ const NOT_CONFIGURED_MESSAGE =
 export async function POST(request: NextRequest) {
   if (!isAiConfigured) {
     return NextResponse.json({ error: NOT_CONFIGURED_MESSAGE }, { status: 503 });
+  }
+
+  const ip = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip");
+  const key = rateLimitKey("sync", ip);
+  const rl = checkRateLimit(key, RATE_LIMIT);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": String(RATE_LIMIT.max),
+          "X-RateLimit-Remaining": "0",
+          "X-RateLimit-Reset": String(Math.ceil(rl.resetAt / 1000)),
+        },
+      },
+    );
   }
 
   let body: { workspaceId?: unknown; kind?: unknown; limitPerSource?: unknown; limitPerFeed?: unknown };

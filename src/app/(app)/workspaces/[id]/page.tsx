@@ -6,6 +6,8 @@ import { WorkspaceLayout } from "@/components/workspace/workspace-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
+export const metadata = { title: "Workspace | MUNOS" };
+
 export default async function WorkspaceDetailPage({
   params,
 }: {

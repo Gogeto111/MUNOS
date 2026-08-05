@@ -9,6 +9,8 @@ import { CountriesManager } from "@/components/profile/countries-manager";
 import { SocialLinksManager } from "@/components/profile/social-links-manager";
 import { Button } from "@/components/ui/button";
 
+export const metadata = { title: "Profile | MUNOS" };
+
 export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (!user) {

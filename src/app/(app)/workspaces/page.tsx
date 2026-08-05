@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
+export const metadata = { title: "Workspaces | MUNOS" };
+
 export default async function WorkspacesPage() {
   const user = await getCurrentUser();
   if (!user) {

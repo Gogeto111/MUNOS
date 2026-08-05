@@ -12,6 +12,8 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+export const metadata = { title: "Dashboard | MUNOS" };
+
 export default async function DashboardPage() {
   const user = await getCurrentUser();
 

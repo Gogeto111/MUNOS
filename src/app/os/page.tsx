@@ -25,6 +25,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { colorClasses } from "@/lib/colors";
 
 const modules = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, color: "brand", description: "Overview and quick actions" },
@@ -93,8 +94,8 @@ export default function OSPage() {
                 <Card className="group cursor-pointer transition-all hover:shadow-md hover:border-brand-500/30 h-full">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <div className={`grid size-10 place-items-center rounded-lg bg-${mod.color}-500/10`}>
-                        <mod.icon className={`size-5 text-${mod.color}-600 dark:text-${mod.color}-400`} />
+                      <div className={`grid size-10 place-items-center rounded-lg ${colorClasses(mod.color).bg}`}>
+                        <mod.icon className={`size-5 ${colorClasses(mod.color).text}`} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
@@ -178,7 +179,7 @@ export default function OSPage() {
                   <div key={s.name} className="flex items-center justify-between text-sm">
                     <span>{s.name}</span>
                     <div className="flex items-center gap-1.5">
-                      <div className={`size-1.5 rounded-full bg-${s.color}-500`} />
+                      <div className={`size-1.5 rounded-full ${colorClasses(s.color).dot}`} />
                       <span className="text-xs text-muted-foreground">{s.status}</span>
                     </div>
                   </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   CalendarDays,
   Globe,
@@ -9,6 +10,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { getDb } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -23,6 +25,10 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Admin | MUNOS" };
 
 export default async function AdminDashboard() {
+  if (isAuthConfigured) {
+    const user = await getCurrentUser();
+    if (!user || user.role !== "ADMIN") redirect("/dashboard");
+  }
   const db = getDb();
   const now = new Date();
 

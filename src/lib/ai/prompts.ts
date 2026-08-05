@@ -212,8 +212,7 @@ export function buildDebateReplyPrompt(ctx: AiCommitteeContext, userSpeech: stri
       `${describeCommittee(ctx)}\n\n` +
       `The delegate's notes:\n${ctx.notes}\n\n` +
       `The delegate has just delivered this speech:\n"${speech}"\n\n` +
-      `Respond as the opposing delegate: acknowledge their point, rebut it substantively, state your " +
-      "delegation's alternative, and finish with one POI-style question.`,
+      `Respond as the opposing delegate: acknowledge their point, rebut it substantively, state your delegation's alternative, and finish with one POI-style question.`,
   };
 }
 

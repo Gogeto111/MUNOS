@@ -274,8 +274,8 @@ export interface SettingsInput {
 export async function updateSettings(
   input: SettingsInput,
 ): Promise<ActionState> {
-  const user = await requireUser();
   try {
+    const user = await requireUser();
     await getDb().userSettings.upsert({
       where: { userId: user.id },
       create: {
@@ -305,8 +305,8 @@ export async function getSettings(): Promise<
     showStats: boolean;
   }>
 > {
-  const user = await requireUser();
   try {
+    const user = await requireUser();
     const settings = await getDb().userSettings.findUnique({
       where: { userId: user.id },
     });
@@ -356,8 +356,8 @@ export async function getCertificates(): Promise<
     }>
   >
 > {
-  const user = await requireUser();
   try {
+    const user = await requireUser();
     const certificates = await getDb().certificate.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
@@ -392,8 +392,8 @@ export async function getUserPortfolio(): Promise<
     stats: { awards: number; certificates: number; committees: number; countries: number };
   }>
 > {
-  const user = await requireUser();
   try {
+    const user = await requireUser();
     const [awards, certificates, committees, countries] = await Promise.all([
       getDb().award.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" } }),
       getDb().certificate.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" } }),

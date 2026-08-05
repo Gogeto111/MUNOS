@@ -2,45 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Award,
-  Bookmark,
-  Camera,
-  Compass,
-  FileBadge,
-  FlaskConical,
-  FolderKanban,
-  LayoutDashboard,
-  MessageSquare,
-  Newspaper,
-  Settings,
-  ShoppingBag,
-  Sparkles,
-  Stamp,
-  UserRound,
-  type LucideIcon,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/shared/logo";
-
-const NAV_ITEMS: { label: string; href: string; icon: LucideIcon }[] = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "MUNOS OS", href: "/os", icon: Sparkles },
-  { label: "Discover", href: "/discover", icon: Compass },
-  { label: "Saved", href: "/saved", icon: Bookmark },
-  { label: "Profile", href: "/profile", icon: UserRound },
-  { label: "Certificates", href: "/certificates", icon: FileBadge },
-  { label: "Portfolio", href: "/portfolio", icon: Award },
-  { label: "Workspaces", href: "/workspaces", icon: FolderKanban },
-  { label: "Simulator", href: "/simulator", icon: FlaskConical },
-  { label: "Organizer", href: "/organizer", icon: FolderKanban },
-  { label: "Marketplace", href: "/marketplace", icon: ShoppingBag },
-  { label: "Coach", href: "/coach", icon: Camera },
-  { label: "News", href: "/news", icon: Newspaper },
-  { label: "Social", href: "/social", icon: MessageSquare },
-  { label: "Passport", href: "/passport", icon: Stamp },
-  { label: "Settings", href: "/settings", icon: Settings },
-];
+import { NAV_ITEMS } from "@/lib/nav";
 
 export function AppSidebar() {
   const pathname = usePathname();

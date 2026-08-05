@@ -155,7 +155,7 @@ export async function submitReview(
       },
     });
 
-    revalidatePath(`/conference/[slug]`);
+    revalidatePath("/discover");
     return ok("Thanks! Your review was published.");
   } catch (error) {
     return toActionError(error);
@@ -166,7 +166,7 @@ export async function deleteReview(conferenceId: string): Promise<ActionState> {
   try {
     const user = await requireUser();
     await getDb().review.deleteMany({ where: { userId: user.id, conferenceId } });
-    revalidatePath(`/conference/[slug]`);
+    revalidatePath("/discover");
     return ok("Review removed.");
   } catch (error) {
     return toActionError(error);

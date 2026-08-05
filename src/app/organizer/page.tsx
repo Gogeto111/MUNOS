@@ -12,6 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getOrganizerStats, getOrganizerConferences } from "@/lib/actions/organizer";
+import { colorClasses } from "@/lib/colors";
 
 interface ConferenceData {
   id: string;
@@ -94,7 +95,7 @@ export default function OrganizerPage() {
               <Card key={stat.label}>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className={`grid size-10 place-items-center rounded-lg bg-${stat.color}-500/10 text-${stat.color}-600`}>
+                    <div className={`grid size-10 place-items-center rounded-lg ${colorClasses(stat.color).bg} ${colorClasses(stat.color).text}`}>
                       <stat.icon className="size-5" />
                     </div>
                     <div>
