@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 const publicSchema = z.object({
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().optional().default("pk_test_bmV1dHJhbC1nZWNrby03NS5jbGVyay5hY2NvdW50cy5kZXYk"),
-  NEXT_PUBLIC_SUPABASE_URL: z.string().optional().default(""),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional().default(""),
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().transform((v) => v || "").default(""),
+  NEXT_PUBLIC_SUPABASE_URL: z.string().transform((v) => v || "").default(""),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().transform((v) => v || "").default(""),
   NEXT_PUBLIC_APP_URL: z
     .string()
     .url()
@@ -26,7 +26,8 @@ export const publicEnv = result.success
   : ({} as z.infer<typeof publicSchema>);
 
 export const isAuthConfigured = Boolean(
-  publicEnv.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+  publicEnv.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
+    publicEnv.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.length > 10,
 );
 export const isStorageConfigured = Boolean(
   publicEnv.NEXT_PUBLIC_SUPABASE_URL &&
