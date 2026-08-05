@@ -10,6 +10,8 @@ const serverSchema = z.object({
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional().default(""),
   AI_MODEL: z.string().optional().default("gemini-2.5-flash"),
   NEXT_PUBLIC_APP_URL: z.string().optional().default("http://localhost:3000"),
+  NEXT_PUBLIC_SUPABASE_URL: z.string().optional().default(""),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional().default(""),
 });
 
 const devSchema = z.object({
@@ -21,6 +23,8 @@ const devSchema = z.object({
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional().default(""),
   AI_MODEL: z.string().optional().default("gemini-2.5-flash"),
   NEXT_PUBLIC_APP_URL: z.string().optional().default("http://localhost:3000"),
+  NEXT_PUBLIC_SUPABASE_URL: z.string().optional().default(""),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional().default(""),
 });
 
 const isProd = process.env.NODE_ENV === "production";
