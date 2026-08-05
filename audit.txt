@@ -1652,3 +1652,69 @@ Phase J � Code Quality & Security (2026-08-05):
 
 Status: SHIP-READY
 Next: Deploy to Vercel, set env vars, run prisma migrate deploy
+
+================================================================================
+ESLINT CLEANUP (2026-08-05)
+================================================================================
+
+  Context: Audit verification showed ESLint PASS with 0 warnings, but the
+  actual run produced ~20 unused-import warnings across newly created files
+  (phases 13-20 UI components). These were non-blocking but noisy.
+
+  Files Fixed (13 total):
+
+  src/app/(app)/dashboard/loading.tsx
+    - Removed unused CardContent import
+
+  src/app/certificates/verify/[id]/page.tsx
+    - Removed unused Award, FileBadge imports
+
+  src/components/admin/conference-settings.tsx
+    - Removed unused Badge, Globe, Calendar, Users, DollarSign, MapPin, Link, Image
+
+  src/components/admin/delegate-management.tsx
+    - Removed unused Filter, CheckCircle, XCircle
+
+  src/components/dashboard/dashboard-activity.tsx
+    - Removed unused Badge, Button, Separator, ArrowUpRight, Users, FolderKanban, Award
+
+  src/components/discover/conference-comparison.tsx
+    - Removed unused Button, Calendar, MapPin, Users, Clock, Globe, ExternalLink
+
+  src/components/discover/conference-recommendations.tsx
+    - Removed unused Button, Users
+
+  src/components/settings/notification-preferences.tsx
+    - Removed unused Badge
+
+  src/components/simulator/simulator-stats.tsx
+    - Removed unused Button, Clock, TrendingUp
+
+  src/components/social/delegate-manager.tsx
+    - Removed unused Badge, Label, Separator, UserMinus
+
+  src/components/social/social-feed.tsx
+    - Removed unused CardHeader, CardTitle, Input, Search, UserPlus, MoreHorizontal
+
+  src/components/workspace/workspace-quick-actions.tsx
+    - Removed unused Button, Plus
+
+  src/components/workspace/file-preview.tsx
+    - Renamed lucide Image -> ImageIcon (resolved type collision with global HTMLImageElement)
+    - Renamed lucide File -> FileIcon (resolved type collision with global File type)
+    - Replaced <img> with next/image (NextImage) with unoptimized flag for dynamic URLs
+    - Added NextImage import from next/image
+
+  Verification:
+    npm run typecheck PASS (0 errors)
+    npm run lint PASS (0 errors, 0 warnings)
+    npm run test -> 170 passed (13 files)
+
+  Note: These were all unused-import warnings from auto-generated component
+  scaffolding (phases 13-20). No logic changes. The file-preview.tsx fixes
+  also resolved two accessibility/a11y warnings (missing alt on img) and
+  a Next.js performance warning (img vs next/image).
+
+================================================================================
+END OF AUDIT (UPDATED 2026-08-05)
+================================================================================

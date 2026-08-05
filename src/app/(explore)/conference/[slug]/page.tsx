@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { publicEnv, isAuthConfigured } from "@/lib/public-env";
 import { Container } from "@/components/shared/container";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ConferenceActions } from "@/components/conference/conference-actions";
 import { ConferenceSidebar } from "@/components/conference/conference-sidebar";
 import { CommitteeTabs } from "@/components/conference/committee-tabs";
@@ -60,13 +61,14 @@ export default async function ConferencePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
-  const conference = (await getDb().conference.findUnique({
-    where: { slug },
-    include: conferenceDetailInclude,
-  })) as ConferenceWithDetail | null;
+  try {
+    const { slug } = await params;
+    const conference = (await getDb().conference.findUnique({
+      where: { slug },
+      include: conferenceDetailInclude,
+    })) as ConferenceWithDetail | null;
 
-  if (!conference || !conference.published) notFound();
+    if (!conference || !conference.published) notFound();
 
   const now = new Date();
   const derived = deriveConference(conference, now);
@@ -247,4 +249,18 @@ export default async function ConferencePage({
       </Container>
     </div>
   );
+  } catch (error) {
+    console.error("[ConferencePage]", error);
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
+        <h2 className="text-lg font-semibold">Something went wrong</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          We couldn&apos;t load this conference. Please try again.
+        </p>
+        <Button asChild className="mt-4" variant="outline">
+          <Link href="/discover">Back to Discover</Link>
+        </Button>
+      </div>
+    );
+  }
 }

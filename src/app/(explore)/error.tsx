@@ -5,7 +5,7 @@ import { AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export default function AppError({
+export default function ExploreError({
   error,
   reset,
 }: {
@@ -21,7 +21,7 @@ export default function AppError({
           </div>
           <h2 className="text-lg font-semibold">Something went wrong</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            An unexpected error occurred. Please try again.
+            We couldn&apos;t load this page. Please try again.
           </p>
           {error.digest && (
             <p className="mt-2 font-mono text-xs text-muted-foreground">
@@ -33,7 +33,7 @@ export default function AppError({
               Try again
             </Button>
             <Button asChild>
-              <Link href="/dashboard">Go to Dashboard</Link>
+              <Link href="/discover">Back to Discover</Link>
             </Button>
           </div>
         </CardContent>

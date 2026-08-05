@@ -17,25 +17,25 @@ const FOOTER_COLUMNS = [
     links: [
       { label: "Delegate Portfolio", href: "/portfolio" },
       { label: "Certificate Manager", href: "/certificates" },
-      { label: "Documentation", href: "#" },
-      { label: "Status", href: "#" },
+      { label: "Discover Conferences", href: "/discover" },
+      { label: "MUN Passport", href: "/passport" },
     ],
   },
   {
-    title: "Company",
+    title: "App",
     links: [
-      { label: "About", href: "#" },
-      { label: "Blog", href: "#" },
-      { label: "Contact", href: "#" },
-      { label: "Careers", href: "#" },
+      { label: "Dashboard", href: "/dashboard" },
+      { label: "Workspaces", href: "/workspaces" },
+      { label: "Simulator", href: "/simulator" },
+      { label: "Coach", href: "/coach" },
     ],
   },
   {
     title: "Legal",
     links: [
-      { label: "Privacy", href: "#" },
-      { label: "Terms", href: "#" },
-      { label: "Security", href: "#" },
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
+      { label: "Cookie Policy", href: "/cookies" },
     ],
   },
 ];
@@ -85,7 +85,7 @@ export function MarketingFooter() {
 
         <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-border/70 pt-6 sm:flex-row">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} MUNOS. All rights reserved.
+            &copy; {new Date().getFullYear()} MUNOS. All rights reserved.
           </p>
           <p className="text-xs text-muted-foreground">
             Crafted with precision for delegates worldwide.
