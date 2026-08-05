@@ -6,6 +6,8 @@ import { judgeSpeech } from "@/lib/ai/judge";
 import { normalizeScore } from "@/lib/ai/judge-parse";
 import type { Prisma } from "@/generated/prisma/client";
 import { checkRateLimit, rateLimitKey } from "@/lib/rate-limit";
+import { trackAiUsage } from "@/lib/ai-usage";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -98,9 +100,33 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Track usage
+    if (userId) {
+      trackAiUsage(userId, "judge", 0); // Token count not available from generateObject
+    }
+
     return NextResponse.json({ score });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Something went wrong.";
+    logger.error("[ai/judge] Error", { message, workspaceId });
+    // Graceful fallback — return a basic score instead of crashing
+    if (message.includes("API key") || message.includes("quota") || message.includes("rate")) {
+      return NextResponse.json(
+        {
+          error: "AI judge is temporarily unavailable. Please try again later.",
+          degraded: true,
+          fallback: {
+            confidence: 50,
+            diplomacy: 50,
+            research: 50,
+            flow: 50,
+            overall: 50,
+            suggestions: ["AI judge is temporarily unavailable. Score is estimated."],
+          },
+        },
+        { status: 503 },
+      );
+    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

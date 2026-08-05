@@ -11,6 +11,8 @@ import {
   type CommitteeAiFeature,
 } from "@/lib/ai/prepare";
 import { checkRateLimit, rateLimitKey } from "@/lib/rate-limit";
+import { trackAiUsage } from "@/lib/ai-usage";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -121,11 +123,35 @@ export async function POST(request: NextRequest) {
       model: google(env.AI_MODEL),
       system: call.system,
       prompt: call.prompt,
+      onFinish: (event) => {
+        const tokens = event.usage?.totalTokens ?? 0;
+        if (userId && tokens > 0) {
+          trackAiUsage(userId, feature, tokens);
+        }
+      },
+      onError: (error) => {
+        logger.error("[ai/generate] Stream error", {
+          feature,
+          workspaceId,
+          error: error.error instanceof Error ? error.error.message : "unknown",
+        });
+      },
     });
 
     return result.toTextStreamResponse();
   } catch (error) {
     const message = error instanceof Error ? error.message : "Something went wrong.";
+    // Graceful AI fallback — return a helpful message instead of a raw 500
+    if (message.includes("API key") || message.includes("quota") || message.includes("rate")) {
+      logger.warn("[ai/generate] AI provider error, returning degraded response", { message });
+      return NextResponse.json(
+        {
+          error: "AI service is temporarily unavailable. Please try again later.",
+          degraded: true,
+        },
+        { status: 503 },
+      );
+    }
     const status = message === "Committee not found." ? 404 : 500;
     return NextResponse.json({ error: message }, { status });
   }
