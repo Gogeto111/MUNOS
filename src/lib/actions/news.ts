@@ -136,7 +136,7 @@ export async function syncNewsFeeds(
               sourceType: "LIVE",
               title: item.title ?? "Untitled",
               source: feed.label,
-              originUrl: item.link ?? item.guid ?? "",
+              originUrl: item.link ?? "",
               metadata: {
                 feedId: feed.id,
                 topics: feed.topics,

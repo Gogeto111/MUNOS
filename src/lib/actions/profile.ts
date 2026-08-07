@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { ok, toActionError, type ActionState } from "@/lib/actions";
+import { ok, fail, toActionError, type ActionState } from "@/lib/actions";
 import { ActivityType } from "@/generated/prisma/client";
 import {
   awardSchema,
@@ -336,6 +336,64 @@ export async function getSettings(): Promise<
       showCertificates: settings.showCertificates,
       showStats: settings.showStats,
     });
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function uploadCertificate(formData: FormData): Promise<ActionState<{ id: string }>> {
+  try {
+    const user = await requireUser();
+    const file = formData.get("file");
+    const title = String(formData.get("title") ?? "").trim();
+    const issuer = String(formData.get("issuer") ?? "").trim() || null;
+    const category = String(formData.get("category") ?? "OTHER").trim();
+    const issueYear = formData.get("issueYear") ? Number(formData.get("issueYear")) : null;
+    const description = String(formData.get("description") ?? "").trim() || null;
+
+    if (!title) return fail("Title is required.");
+    if (!(file instanceof File)) return fail("No file provided.");
+    if (file.size > 10 * 1024 * 1024) return fail("File too large (max 10 MB).");
+
+    const { uploadConferenceAsset } = await import("@/lib/upload");
+    const result = await uploadConferenceAsset(file, "certificates");
+    if ("error" in result) return fail(result.error);
+
+    const certificate = await getDb().certificate.create({
+      data: {
+        userId: user.id,
+        title,
+        issuer,
+        category: category as never,
+        issueYear: issueYear && !isNaN(issueYear) ? issueYear : null,
+        fileName: file.name,
+        mimeType: file.type,
+        sizeBytes: file.size,
+        fileUrl: result.url,
+        fileKey: result.key,
+        description,
+      },
+      select: { id: true },
+    });
+
+    revalidatePath("/certificates");
+    return ok("Certificate uploaded.", { id: certificate.id });
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function deleteCertificate(certificateId: string): Promise<ActionState> {
+  try {
+    const user = await requireUser();
+    const cert = await getDb().certificate.findFirst({
+      where: { id: certificateId, userId: user.id },
+    });
+    if (!cert) return fail("Certificate not found.");
+
+    await getDb().certificate.delete({ where: { id: certificateId } });
+    revalidatePath("/certificates");
+    return ok("Certificate deleted.");
   } catch (error) {
     return toActionError(error);
   }
