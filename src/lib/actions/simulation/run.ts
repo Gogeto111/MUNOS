@@ -1,3 +1,5 @@
+"use server";
+
 import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
 import { ok, fail, type ActionState } from "@/lib/actions";

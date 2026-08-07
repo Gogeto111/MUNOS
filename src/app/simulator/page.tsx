@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Mic,
@@ -12,6 +12,8 @@ import {
   Loader2,
   ChevronRight,
   Globe,
+  MessageCircle,
+  X,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +27,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
+import { createSimulation } from "@/lib/actions/simulation/create";
+import {
+  startSimulation,
+  pauseSimulation,
+  finishSimulation,
+} from "@/lib/actions/simulation/run";
+import { generateAISpeech } from "@/lib/actions/simulation/ai";
+import {
+  getSimulationState,
+  respondToPOI,
+  addChairAnnouncement,
+  addMotion,
+  addVote,
+} from "@/lib/actions/simulation/state";
+import { awardDelegate } from "@/lib/actions/simulation/vote";
 
 const COMMITTEES = [
   "UNSC — Security Council",
@@ -46,6 +64,30 @@ const COUNTRIES = [
   "UAE", "Indonesia", "Turkey", "Syria", "Ukraine",
 ];
 
+type SimulationEvent = {
+  id: string;
+  type: string;
+  content: string;
+  delegateId: string | null;
+  speakingTimeSec: number | null;
+  createdAt: Date;
+};
+
+type Delegate = {
+  id: string;
+  country: string;
+  countryFlag: string | null;
+  displayName: string;
+  isAi: boolean;
+  isChair: boolean;
+  policyStance: string | null;
+  speakingStyle: string | null;
+  speakingCount: number;
+  poiCount: number;
+  motionCount: number;
+  award: string;
+};
+
 export default function SimulatorPage() {
   const router = useRouter();
   const [step, setStep] = useState<"setup" | "running" | "finished">("setup");
@@ -53,127 +95,168 @@ export default function SimulatorPage() {
   const [topic, setTopic] = useState("");
   const [country, setCountry] = useState("");
   const [selectedDelegates, setSelectedDelegates] = useState<string[]>([]);
-  const [events, setEvents] = useState<
-    { type: string; content: string; delegate: string }[]
-  >([]);
+  const [events, setEvents] = useState<SimulationEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [aiDelegates, setAiDelegates] = useState<
-    Array<{ country: string; name: string; isChair: boolean; speeches: number }>
-  >([]);
-  const [speakingDelegate, setSpeakingDelegate] = useState<string | null>(
-    null,
-  );
+  const [simulationId, setSimulationId] = useState<string | null>(null);
+  const [delegates, setDelegates] = useState<Delegate[]>([]);
+  const [speakingDelegateId, setSpeakingDelegateId] = useState<string | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showAwards, setShowAwards] = useState(false);
+  const [poiTargetId, setPoiTargetId] = useState<string | null>(null);
+  const [poiQuestion, setPoiQuestion] = useState("");
+  const [showPoiModal, setShowPoiModal] = useState(false);
+  const [showMotionModal, setShowMotionModal] = useState(false);
+  const [motionType, setMotionType] = useState("moderated_caucus");
+  const [motionDesc, setMotionDesc] = useState("");
+
+  const refreshState = useCallback(async (simId: string) => {
+    const result = await getSimulationState(simId);
+    if (result.status === "success" && result.data) {
+      setDelegates(result.data.delegates as Delegate[]);
+      setEvents(result.data.events as SimulationEvent[]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (simulationId) {
+      refreshState(simulationId);
+    }
+  }, [simulationId, refreshState]);
 
   const handleStart = async () => {
-    if (!committee) return;
+    if (!committee || !country || selectedDelegates.length < 1) return;
     setIsLoading(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setStep("running");
-    setIsLoading(false);
 
-    setAiDelegates(
-      selectedDelegates.map((c) => ({
-        country: c,
-        name: `${c} Delegate`,
-        isChair: false,
-        speeches: 0,
-      })),
+    const result = await createSimulation({
+      committeeName: committee,
+      topic: topic || "General Debate",
+      country,
+      delegateCountries: selectedDelegates,
+    });
+
+    if (result.status === "error") {
+      toast.error(result.message);
+      setIsLoading(false);
+      return;
+    }
+
+    const simId = (result as { status: "success"; data: { id: string } }).data.id;
+
+    const startResult = await startSimulation(simId);
+    if (startResult.status === "error") {
+      toast.error(startResult.message);
+      setIsLoading(false);
+      return;
+    }
+
+    setSimulationId(simId);
+    setStep("running");
+
+    await addChairAnnouncement(
+      simId,
+      `The committee session is now in session. Agenda: ${topic || "General Debate"}. The chair recognizes all delegates.`,
     );
 
-    setEvents([
-      {
-        type: "CHAIR_ANNOUNCEMENT",
-        content: `Committee session opened. Agenda: ${topic || "General Debate"}. Roll call complete.`,
-        delegate: "AI Chair",
-      },
-    ]);
+    await refreshState(simId);
+    setIsLoading(false);
+    toast.success("Simulation started!");
   };
 
-  const handleGenerateSpeech = async (delegateCountry: string) => {
-    setSpeakingDelegate(delegateCountry);
+  const handleGenerateSpeech = async (delegateId: string, delegateName: string) => {
+    if (!simulationId) return;
+    setSpeakingDelegateId(delegateId);
     setIsSpeaking(true);
-    await new Promise((r) => setTimeout(r, 800));
-    const speeches = [
-      `${delegateCountry} delegation emphasizes the importance of multilateral cooperation on this issue. We call on all parties to engage constructively and find common ground.`,
-      `${delegateCountry} firmly believes that the path forward requires balanced dialogue. We propose a working group to examine this matter in detail.`,
-      `${delegateCountry} stresses that sovereignty and international law must guide our discussions. We stand ready to collaborate with all delegations.`,
-      `${delegateCountry} welcomes this opportunity to address the committee. Our position is clear: we seek practical solutions that serve the collective interest.`,
-    ];
-    const speech = speeches[Math.floor(Math.random() * speeches.length)];
-    setEvents((e) => [
-      ...e,
-      {
-        type: "SPEECH",
-        content: speech,
-        delegate: delegateCountry,
-      },
-    ]);
-    setAiDelegates((prev) =>
-      prev.map((d) =>
-        d.country === delegateCountry
-          ? { ...d, speeches: d.speeches + 1 }
-          : d,
-      ),
-    );
-    setSpeakingDelegate(null);
+
+    const result = await generateAISpeech(simulationId, delegateId);
+
+    if (result.status === "error") {
+      toast.error(result.message);
+    } else {
+      toast.success(`${delegateName} delivered their speech`);
+    }
+
+    await refreshState(simulationId);
+    setSpeakingDelegateId(null);
     setIsSpeaking(false);
   };
 
-  const handlePOI = async () => {
-    if (aiDelegates.length < 2) return;
-    const target = aiDelegates[
-      Math.floor(Math.random() * aiDelegates.length)
-    ];
-    setEvents((e) => [
-      ...e,
-      {
-        type: "POI_ANSWERED",
-        content: `POI raised against ${target.country}. ${target.country} responds: "We appreciate the question and would like to clarify our position."`,
-        delegate: target.country,
-      },
-    ]);
+  const handlePOISubmit = async () => {
+    if (!simulationId || !poiTargetId || !poiQuestion.trim()) return;
+    setIsSpeaking(true);
+    setShowPoiModal(false);
+
+    const result = await respondToPOI(simulationId, poiTargetId, poiQuestion);
+
+    if (result.status === "error") {
+      toast.error(result.message);
+    } else {
+      toast.success("POI response received");
+    }
+
+    setPoiQuestion("");
+    setPoiTargetId(null);
+    await refreshState(simulationId);
+    setIsSpeaking(false);
   };
 
-  const handleMotion = async () => {
-    setEvents((e) => [
-      ...e,
-      {
-        type: "MOTION",
-        content: `Motion to move into a moderated caucus on "${topic || "agenda item"}" passed (9-2-3). Speaking time: 90 seconds.`,
-        delegate: "Chair",
-      },
-    ]);
+  const handleMotionSubmit = async () => {
+    if (!simulationId || !motionDesc.trim()) return;
+
+    const userDelegate = delegates.find((d) => !d.isAi);
+    if (!userDelegate) return;
+
+    const result = await addMotion(
+      simulationId,
+      userDelegate.id,
+      motionType,
+      motionDesc,
+    );
+
+    if (result.status === "error") {
+      toast.error(result.message);
+    }
+
+    setMotionDesc("");
+    setShowMotionModal(false);
+    await refreshState(simulationId);
   };
 
   const handleVote = async (choice: string) => {
-    setEvents((e) => [
-      ...e,
-      {
-        type: "VOTE",
-        content: `Vote recorded: ${choice}. The motion passes with a clear majority.`,
-        delegate: "Chair",
-      },
-    ]);
+    if (!simulationId) return;
+    const userDelegate = delegates.find((d) => !d.isAi);
+    if (!userDelegate) return;
+
+    await addVote(simulationId, userDelegate.id, choice, "pending");
+    await refreshState(simulationId);
   };
 
-  const handleAward = (delegateCountry: string, award: string) => {
-    setEvents((e) => [
-      ...e,
-      {
-        type: "AWARD",
-        content: `${delegateCountry} awarded ${award} for outstanding performance in committee.`,
-        delegate: "Chair",
-      },
-    ]);
-    setAiDelegates((prev) =>
-      prev.map((d) =>
-        d.country === delegateCountry
-          ? { ...d, name: `${d.name} ★` }
-          : d,
-      ),
-    );
+  const handleEnd = async () => {
+    if (!simulationId) return;
+    setIsLoading(true);
+
+    const result = await finishSimulation(simulationId);
+    if (result.status === "error") {
+      toast.error(result.message);
+    }
+
+    await refreshState(simulationId);
+    setStep("finished");
+    setIsLoading(false);
+  };
+
+  const handleAward = async (delegateId: string, award: string) => {
+    if (!simulationId) return;
+
+    const result = await awardDelegate(simulationId, {
+      delegateId,
+      award,
+    });
+
+    if (result.status === "error") {
+      toast.error(result.message);
+    }
+
+    await refreshState(simulationId);
   };
 
   const toggleDelegate = (c: string) => {
@@ -186,207 +269,243 @@ export default function SimulatorPage() {
     );
   };
 
-  const runningView = () => (
-    <div className="grid gap-6 lg:grid-cols-3">
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Gavel className="size-5 text-brand-600" />
-            {committee}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-xl border border-border/70 bg-muted/30 p-3">
-            <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-              <Globe className="size-3.5" /> Topic
-            </div>
-            <p className="text-sm font-medium">{topic || "General Debate"}</p>
-          </div>
-          <ScrollArea className="h-[50vh] rounded-xl border border-border/60 p-4">
-            <div className="space-y-3">
-              {events.map((ev, i) => (
-                <div
-                  key={i}
-                  className={`rounded-lg p-3 text-sm ${
-                    ev.type === "CHAIR_ANNOUNCEMENT"
-                      ? "border border-brand-500/30 bg-brand-500/5"
-                      : ev.type === "POI_ANSWERED"
-                        ? "border border-emerald-500/30 bg-emerald-500/5"
-                        : ev.type === "MOTION"
-                          ? "border border-amber-500/30 bg-amber-500/5"
-                          : ev.type === "AWARD"
-                            ? "border border-purple-500/30 bg-purple-500/5"
-                            : "border border-border/60 bg-muted/20"
-                  }`}
-                >
-                  <div className="mb-1 flex items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] uppercase tracking-wide"
-                    >
-                      {ev.delegate}
-                    </Badge>
-                    <span className="text-[10px] text-muted-foreground">
-                      {ev.type.replace(/_/g, " ")}
-                    </span>
-                  </div>
-                  <p className="leading-relaxed">{ev.content}</p>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+  const getEventStyle = (type: string) => {
+    switch (type) {
+      case "CHAIR_ANNOUNCEMENT":
+        return "border-brand-500/30 bg-brand-500/5";
+      case "SPEECH":
+        return "border-border/60 bg-muted/20";
+      case "POI_ASKED":
+        return "border-emerald-500/30 bg-emerald-500/5";
+      case "POI_ANSWERED":
+        return "border-emerald-500/30 bg-emerald-500/5";
+      case "MOTION":
+        return "border-amber-500/30 bg-amber-500/5";
+      case "VOTE":
+        return "border-orange-500/30 bg-orange-500/5";
+      case "AWARD":
+        return "border-purple-500/30 bg-purple-500/5";
+      default:
+        return "border-border/60 bg-muted/20";
+    }
+  };
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-semibold"> Controls</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">
-              Your country
-            </p>
-            <div className="flex items-center gap-2 rounded-lg bg-brand-500/10 p-2">
-              <span className="text-lg">{getFlag(country)}</span>
-              <span className="text-sm font-medium">{country}</span>
+  const runningView = () => {
+    const aiDelegates = delegates.filter((d) => d.isAi);
+    const userDelegate = delegates.find((d) => !d.isAi);
+
+    return (
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Gavel className="size-5 text-brand-600" />
+              {committee}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-xl border border-border/70 bg-muted/30 p-3">
+              <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <Globe className="size-3.5" /> Topic
+              </div>
+              <p className="text-sm font-medium">{topic || "General Debate"}</p>
             </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">
-              AI Delegates ({selectedDelegates.length}/6 selected)
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {selectedDelegates.map((c) => (
-                <Badge key={c} variant="secondary" className="gap-1 text-xs">
-                  {getFlag(c)} {c}
-                </Badge>
+            <ScrollArea className="h-[50vh] rounded-xl border border-border/60 p-4">
+              <div className="space-y-3">
+                {events.length === 0 && (
+                  <p className="text-center text-sm text-muted-foreground py-8">
+                    No events yet. Ask a delegate to deliver a speech.
+                  </p>
+                )}
+                {events.map((ev) => (
+                  <div
+                    key={ev.id}
+                    className={`rounded-lg border p-3 text-sm ${getEventStyle(ev.type)}`}
+                  >
+                    <div className="mb-1 flex items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] uppercase tracking-wide"
+                      >
+                        {delegates.find((d) => d.id === ev.delegateId)?.displayName ?? "Chair"}
+                      </Badge>
+                      <span className="text-[10px] text-muted-foreground">
+                        {ev.type.replace(/_/g, " ")}
+                      </span>
+                      {ev.speakingTimeSec != null && (
+                        <span className="text-[10px] text-muted-foreground">
+                          ({ev.speakingTimeSec}s)
+                        </span>
+                      )}
+                    </div>
+                    <p className="leading-relaxed whitespace-pre-wrap">{ev.content}</p>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-semibold">Controls</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {userDelegate && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">Your country</p>
+                <div className="flex items-center gap-2 rounded-lg bg-brand-500/10 p-2">
+                  <span className="text-lg">{getFlag(userDelegate.country)}</span>
+                  <span className="text-sm font-medium">{userDelegate.country}</span>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">
+                AI Delegates ({aiDelegates.length})
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {aiDelegates.map((d) => (
+                  <Badge key={d.id} variant="secondary" className="gap-1 text-xs">
+                    {getFlag(d.country)} {d.country}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <p className="text-xs font-medium text-muted-foreground">Delegate Speeches</p>
+              {aiDelegates.map((d) => (
+                <Button
+                  key={d.id}
+                  onClick={() => handleGenerateSpeech(d.id, d.displayName)}
+                  disabled={isSpeaking}
+                  variant="outline"
+                  className="w-full gap-2 text-xs"
+                >
+                  {isSpeaking && speakingDelegateId === d.id ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <Mic className="size-3" />
+                  )}
+                  {d.displayName}
+                  {d.speakingCount > 0 && (
+                    <span className="ml-auto text-[10px] text-muted-foreground">
+                      {d.speakingCount} speech{d.speakingCount > 1 ? "es" : ""}
+                    </span>
+                  )}
+                </Button>
               ))}
             </div>
-          </div>
-          <div className="space-y-2 pt-2">
-            <p className="text-xs font-medium text-muted-foreground">
-              Delegate Speeches
-            </p>
-            {aiDelegates.map((d) => (
+
+            <div className="space-y-2 pt-2">
               <Button
-                key={d.country}
-                onClick={() => handleGenerateSpeech(d.country)}
-                disabled={isSpeaking && speakingDelegate === d.country}
+                onClick={() => {
+                  if (aiDelegates.length > 0) {
+                    setPoiTargetId(aiDelegates[0].id);
+                    setShowPoiModal(true);
+                  }
+                }}
+                disabled={isSpeaking || aiDelegates.length === 0}
                 variant="outline"
-                className="w-full gap-2 text-xs"
+                className="w-full gap-2"
               >
-                {isSpeaking && speakingDelegate === d.country ? (
-                  <Loader2 className="size-3 animate-spin" />
-                ) : (
-                  <Mic className="size-3" />
-                )}
-                {d.name}
-                {d.speeches > 0 && (
-                  <span className="ml-auto text-[10px] text-muted-foreground">
-                    {d.speeches} speech{d.speeches > 1 ? "es" : ""}
-                  </span>
-                )}
+                <MessageCircle className="size-4" /> Raise POI
               </Button>
-            ))}
-          </div>
-          <div className="space-y-2 pt-2">
-            <Button
-              onClick={handlePOI}
-              variant="outline"
-              className="w-full gap-2"
-            >
-              <Mic className="size-4" /> Raise POI
-            </Button>
-            <Button
-              onClick={handleMotion}
-              variant="outline"
-              className="w-full gap-2"
-            >
-              <Gavel className="size-4" /> Motion
-            </Button>
+              <Button
+                onClick={() => setShowMotionModal(true)}
+                variant="outline"
+                className="w-full gap-2"
+              >
+                <Gavel className="size-4" /> Motion
+              </Button>
+              <div className="flex gap-2 pt-1">
+                <Button
+                  onClick={() => handleVote("For")}
+                  variant="outline"
+                  className="flex-1 gap-2"
+                >
+                  Vote: For
+                </Button>
+                <Button
+                  onClick={() => handleVote("Against")}
+                  variant="outline"
+                  className="flex-1 gap-2"
+                >
+                  Vote: Against
+                </Button>
+              </div>
+            </div>
+
             <div className="flex gap-2 pt-1">
               <Button
-                onClick={() => handleVote("For")}
+                onClick={() => setShowAwards(!showAwards)}
                 variant="outline"
                 className="flex-1 gap-2"
               >
-                Vote: For
+                <Trophy className="size-4" /> Awards
               </Button>
               <Button
-                onClick={() => handleVote("Against")}
-                variant="outline"
+                onClick={handleEnd}
+                disabled={isLoading}
+                variant="secondary"
                 className="flex-1 gap-2"
               >
-                Vote: Against
+                {isLoading ? <Loader2 className="size-4 animate-spin" /> : <Square className="size-4" />}
+                End Session
               </Button>
             </div>
-          </div>
-          <div className="flex gap-2 pt-1">
-            <Button
-              onClick={() => setShowAwards(!showAwards)}
-              variant="outline"
-              className="flex-1 gap-2"
-            >
-              <Trophy className="size-4" /> Awards
-            </Button>
-            <Button
-              onClick={() => setStep("finished")}
-              variant="secondary"
-              className="flex-1 gap-2"
-            >
-              End & Award
-            </Button>
-          </div>
-          {showAwards && (
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
-              <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
-                Award Delegates
-              </p>
-              {aiDelegates.map((d) => (
-                <div key={d.country} className="flex items-center gap-2">
-                  <span className="text-xs flex-1">{d.name}</span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 text-[10px]"
-                    onClick={() => handleAward(d.country, "Best Delegate")}
-                  >
-                    Best
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 text-[10px]"
-                    onClick={() =>
-                      handleAward(d.country, "Outstanding Delegate")
-                    }
-                  >
-                    Outstanding
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 text-[10px]"
-                    onClick={() =>
-                      handleAward(d.country, "Honorable Mention")
-                    }
-                  >
-                    Mention
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
+
+            {showAwards && (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+                <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                  Award Delegates
+                </p>
+                {aiDelegates.map((d) => (
+                  <div key={d.id} className="flex items-center gap-2">
+                    <span className="text-xs flex-1 truncate">{d.displayName}</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 text-[10px]"
+                      disabled={d.award !== "NONE"}
+                      onClick={() => handleAward(d.id, "BEST_DELEGATE")}
+                    >
+                      Best
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 text-[10px]"
+                      disabled={d.award !== "NONE"}
+                      onClick={() => handleAward(d.id, "OUTSTANDING_DELEGATE")}
+                    >
+                      Outstanding
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 text-[10px]"
+                      disabled={d.award !== "NONE"}
+                      onClick={() => handleAward(d.id, "HONORABLE_MENTION")}
+                    >
+                      Mention
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
   const setupView = () => (
     <Card>
       <CardHeader>
-        <CardTitle> Setup Committee</CardTitle>
+        <CardTitle>Setup Committee</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
@@ -450,7 +569,7 @@ export default function SimulatorPage() {
         </div>
         <Button
           onClick={handleStart}
-          disabled={!committee || !country || selectedDelegates.length < 1}
+          disabled={!committee || !country || selectedDelegates.length < 1 || isLoading}
           className="w-full gap-2"
         >
           {isLoading ? (
@@ -482,10 +601,10 @@ export default function SimulatorPage() {
           <p className="mb-2 text-sm font-medium">Final Events ({events.length})</p>
           <ScrollArea className="h-[35vh] rounded-xl border border-border/60 p-4">
             <div className="space-y-2">
-              {events.map((ev, i) => (
-                <div key={i} className="text-sm">
+              {events.map((ev) => (
+                <div key={ev.id} className="text-sm">
                   <Badge variant="outline" className="mr-2 text-xs">
-                    {ev.delegate}
+                    {delegates.find((d) => d.id === ev.delegateId)?.displayName ?? "Chair"}
                   </Badge>
                   {ev.content}
                 </div>
@@ -495,7 +614,13 @@ export default function SimulatorPage() {
         </div>
         <div className="flex gap-3">
           <Button
-            onClick={() => setStep("setup")}
+            onClick={() => {
+              setStep("setup");
+              setSimulationId(null);
+              setEvents([]);
+              setDelegates([]);
+              setShowAwards(false);
+            }}
             variant="outline"
             className="flex-1"
           >
@@ -510,6 +635,88 @@ export default function SimulatorPage() {
         </div>
       </CardContent>
     </Card>
+  );
+
+  const poiModal = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <Card className="w-full max-w-md">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-sm">Raise Point of Information</CardTitle>
+          <Button variant="ghost" size="sm" onClick={() => setShowPoiModal(false)}>
+            <X className="size-4" />
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Select value={poiTargetId ?? ""} onValueChange={setPoiTargetId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select delegate to address" />
+            </SelectTrigger>
+            <SelectContent>
+              {delegates
+                .filter((d) => d.isAi)
+                .map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {getFlag(d.country)} {d.displayName}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+          <Textarea
+            value={poiQuestion}
+            onChange={(e) => setPoiQuestion(e.target.value)}
+            placeholder="Your question or challenge..."
+            rows={3}
+          />
+          <Button
+            onClick={handlePOISubmit}
+            disabled={!poiTargetId || !poiQuestion.trim() || isSpeaking}
+            className="w-full"
+          >
+            {isSpeaking ? <Loader2 className="size-4 animate-spin" /> : "Send POI"}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const motionModal = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <Card className="w-full max-w-md">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-sm">Submit Motion</CardTitle>
+          <Button variant="ghost" size="sm" onClick={() => setShowMotionModal(false)}>
+            <X className="size-4" />
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Select value={motionType} onValueChange={setMotionType}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="moderated_caucus">Moderated Caucus</SelectItem>
+              <SelectItem value="unmoderated_caucus">Unmoderated Caucus</SelectItem>
+              <SelectItem value="set_the_agenda">Set the Agenda</SelectItem>
+              <SelectItem value="close_debate">Close Debate</SelectItem>
+              <SelectItem value="suspend_rules">Suspend Rules</SelectItem>
+            </SelectContent>
+          </Select>
+          <Textarea
+            value={motionDesc}
+            onChange={(e) => setMotionDesc(e.target.value)}
+            placeholder="Describe the motion..."
+            rows={3}
+          />
+          <Button
+            onClick={handleMotionSubmit}
+            disabled={!motionDesc.trim()}
+            className="w-full"
+          >
+            Submit Motion
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   );
 
   return (
@@ -537,10 +744,27 @@ export default function SimulatorPage() {
           <div className="flex items-center gap-2">
             {step === "running" && (
               <>
-                <Button variant="outline" size="sm" className="gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => {
+                    if (simulationId) {
+                      pauseSimulation(simulationId).then(() => {
+                        toast.info("Simulation paused");
+                      });
+                    }
+                  }}
+                >
                   <Pause className="size-3.5" /> Pause
                 </Button>
-                <Button variant="destructive" size="sm" className="gap-1.5">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={handleEnd}
+                  disabled={isLoading}
+                >
                   <Square className="size-3.5" /> End
                 </Button>
               </>
@@ -551,6 +775,9 @@ export default function SimulatorPage() {
         {step === "setup" && setupView()}
         {step === "running" && runningView()}
         {step === "finished" && finishedView()}
+
+        {showPoiModal && poiModal()}
+        {showMotionModal && motionModal()}
       </div>
     </div>
   );
