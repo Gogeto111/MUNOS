@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
+import type { ExperienceLevel, SocialPlatform } from "../src/generated/prisma/browser";
 
 async function main() {
   const directUrl = process.env.DATABASE_URL!.replace(":6543", ":5432");
@@ -1336,14 +1337,14 @@ async function main() {
           },
         },
         socialLinks: {
-          create: seed.socials.map((s) => ({ platform: s.platform as any, url: s.url })),
+           create: seed.socials.map((s) => ({ platform: s.platform as SocialPlatform, url: s.url })),
         },
         committees: {
           create: seed.committees.map((c, i) => ({
             name: c.name,
             topic: c.topic,
             description: c.description,
-            difficulty: c.difficulty as any,
+             difficulty: c.difficulty as ExperienceLevel,
             maxDelegates: c.maxDelegates,
             createdAt: new Date(Date.now() + i),
             countryMatrix: {
