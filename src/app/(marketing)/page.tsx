@@ -27,7 +27,6 @@ const STRUCTURED_DATA = {
 };
 
 export default function MarketingPage() {
-  // Trigger redeploy - Vercel cache fix
   return (
     <>
       <script

@@ -4,7 +4,6 @@ import { MarketingFooter } from "@/components/marketing/footer";
 export default function MarketingLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // Trigger redeploy - Vercel cache fix for marketing
   return (
     <div className="flex min-h-screen flex-col">
       <MarketingNavbar />
