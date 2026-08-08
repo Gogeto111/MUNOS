@@ -163,6 +163,159 @@ export async function generateCertificate(
   }
 }
 
+export async function bulkGenerateCertificates(
+  conferenceId: string,
+): Promise<ActionState<{ generated: number }>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return fail("Sign in required.");
+    if (user.role !== "ADMIN") return fail("Organizer access required.");
+
+    const db = getDb();
+
+    const conference = await db.conference.findFirst({
+      where: { id: conferenceId },
+      select: { id: true, name: true },
+    });
+    if (!conference) return fail("Conference not found.");
+
+    const workspaces = await db.workspace.findMany({
+      where: { conferenceId },
+      select: {
+        userId: true,
+        user: {
+          select: { firstName: true, lastName: true },
+        },
+      },
+    });
+
+    const delegateIds = workspaces
+      .filter((w) => w.user !== null)
+      .map((w) => w.userId);
+
+    if (delegateIds.length === 0) {
+      return ok("No delegates registered for this conference.", { generated: 0 });
+    }
+
+    const existingCerts = await db.certificate.findMany({
+      where: {
+        userId: { in: delegateIds },
+        title: { contains: conference.name },
+      },
+      select: { userId: true },
+    });
+
+    const existingUserIds = new Set(existingCerts.map((c) => c.userId));
+    const newDelegates = workspaces.filter(
+      (w) => w.user !== null && !existingUserIds.has(w.userId),
+    );
+
+    if (newDelegates.length === 0) {
+      return ok("All delegates already have certificates.", { generated: 0 });
+    }
+
+    const certificates = await db.certificate.createMany({
+      data: newDelegates.map((w) => ({
+        userId: w.userId,
+        title: `Certificate of Participation — ${conference.name}`,
+        issuer: conference.name,
+        category: "PARTICIPATION" as const,
+        issueYear: new Date().getFullYear(),
+        fileName: `certificate-${conferenceId}-${w.userId}.pdf`,
+        mimeType: "application/pdf",
+        sizeBytes: 0,
+        fileUrl: "",
+        fileKey: "",
+        description: `Participation certificate for ${w.user!.firstName ?? ""} ${w.user!.lastName ?? ""} at ${conference.name}`,
+      })),
+    });
+
+    return ok(`Generated ${certificates.count} certificate(s).`, {
+      generated: certificates.count,
+    });
+  } catch (error) {
+    return fail(error instanceof Error ? error.message : "Failed to generate certificates.");
+  }
+}
+
+export async function getConferenceDelegatesWithCerts(
+  conferenceId: string,
+): Promise<
+  ActionState<{
+    totalDelegates: number;
+    totalWithCerts: number;
+    totalWithoutCerts: number;
+    delegates: Array<{
+      id: string;
+      firstName: string | null;
+      lastName: string | null;
+      hasCert: boolean;
+    }>;
+  }>
+> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return fail("Sign in required.");
+    if (user.role !== "ADMIN") return fail("Organizer access required.");
+
+    const db = getDb();
+
+    const conference = await db.conference.findFirst({
+      where: { id: conferenceId },
+      select: { id: true, name: true },
+    });
+    if (!conference) return fail("Conference not found.");
+
+    const workspaces = await db.workspace.findMany({
+      where: { conferenceId },
+      select: {
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    const delegateIds = workspaces
+      .filter((w) => w.user !== null)
+      .map((w) => w.userId);
+
+    const existingCerts = await db.certificate.findMany({
+      where: {
+        userId: { in: delegateIds },
+        title: { contains: conference.name },
+      },
+      select: { userId: true },
+    });
+
+    const certUserIds = new Set(existingCerts.map((c) => c.userId));
+
+    const delegates = workspaces
+      .filter((w) => w.user !== null)
+      .map((w) => ({
+        id: w.user!.id,
+        firstName: w.user!.firstName,
+        lastName: w.user!.lastName,
+        hasCert: certUserIds.has(w.userId),
+      }));
+
+    const totalWithCerts = delegates.filter((d) => d.hasCert).length;
+
+    return ok("Loaded.", {
+      totalDelegates: delegates.length,
+      totalWithCerts,
+      totalWithoutCerts: delegates.length - totalWithCerts,
+      delegates,
+    });
+  } catch (error) {
+    return fail(error instanceof Error ? error.message : "Failed to load delegate data.");
+  }
+}
+
 export async function getOrganizerConferences(): Promise<
   ActionState<
     Array<{

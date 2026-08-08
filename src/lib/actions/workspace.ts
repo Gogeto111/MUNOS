@@ -5,6 +5,7 @@ import { getDb } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { deleteStoredObject } from "@/lib/storage";
 import { ok, toActionError, type ActionState } from "@/lib/actions";
+import type { TaskStatus, TaskPriority } from "@/generated/prisma/browser";
 import {
   attachmentInputSchema,
   folderInputSchema,
@@ -401,6 +402,141 @@ export async function deleteTask(
 
     revalidateWorkspacePaths(workspaceId);
     return ok("Task deleted.");
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function assignTask(
+  workspaceId: string,
+  taskId: string,
+  assigneeUserId: string,
+): Promise<ActionState> {
+  try {
+    const user = await requireUser();
+    await assertOwnsWorkspace(user.id, workspaceId);
+
+    const task = await getDb().workspaceTask.findFirst({
+      where: { id: taskId, workspaceId },
+      select: { id: true },
+    });
+    if (!task) throw new Error("Task not found.");
+
+    await getDb().workspaceTask.update({
+      where: { id: taskId },
+      data: { assigneeId: assigneeUserId },
+    });
+
+    revalidateWorkspacePaths(workspaceId);
+    return ok("Task assigned.");
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function unassignTask(
+  workspaceId: string,
+  taskId: string,
+): Promise<ActionState> {
+  try {
+    const user = await requireUser();
+    await assertOwnsWorkspace(user.id, workspaceId);
+
+    const task = await getDb().workspaceTask.findFirst({
+      where: { id: taskId, workspaceId },
+      select: { id: true },
+    });
+    if (!task) throw new Error("Task not found.");
+
+    await getDb().workspaceTask.update({
+      where: { id: taskId },
+      data: { assigneeId: null },
+    });
+
+    revalidateWorkspacePaths(workspaceId);
+    return ok("Task unassigned.");
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function getWorkspaceTasksWithAssignees(
+  workspaceId: string,
+): Promise<
+  ActionState<
+    {
+      id: string;
+      title: string;
+      description: string | null;
+      status: TaskStatus;
+      priority: TaskPriority;
+      dueAt: Date | null;
+      completedAt: Date | null;
+      createdAt: Date;
+      assignee: {
+        id: string;
+        firstName: string | null;
+        lastName: string | null;
+        avatarUrl: string | null;
+      } | null;
+    }[]
+  >
+> {
+  try {
+    const user = await requireUser();
+    await assertOwnsWorkspace(user.id, workspaceId);
+
+    const tasks = await getDb().workspaceTask.findMany({
+      where: { workspaceId },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        priority: true,
+        dueAt: true,
+        completedAt: true,
+        createdAt: true,
+        assignee: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return ok("ok", tasks);
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function getWorkspaceProgress(
+  workspaceId: string,
+): Promise<ActionState<{ done: number; total: number; percent: number }>> {
+  try {
+    const user = await requireUser();
+    await assertOwnsWorkspace(user.id, workspaceId);
+
+    const result = await getDb().workspaceTask.aggregate({
+      where: { workspaceId },
+      _count: { id: true },
+    });
+
+    const doneResult = await getDb().workspaceTask.aggregate({
+      where: { workspaceId, status: "DONE" },
+      _count: { id: true },
+    });
+
+    const total = result._count.id;
+    const done = doneResult._count.id;
+    const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+
+    return ok("ok", { done, total, percent });
   } catch (error) {
     return toActionError(error);
   }

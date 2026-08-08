@@ -1,7 +1,6 @@
 import {
   CalendarClock,
   FileText,
-  ListChecks,
   Paperclip,
   Pin,
 } from "lucide-react";
@@ -15,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { WorkspaceProgress } from "@/components/workspace/workspace-progress";
 import type { WorkspaceData } from "@/components/workspace/workspace-layout";
 
 export function WorkspaceOverview({ workspace }: { workspace: WorkspaceData }) {
@@ -37,21 +36,12 @@ export function WorkspaceOverview({ workspace }: { workspace: WorkspaceData }) {
       ) : null}
 
       <div className="grid gap-6 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <ListChecks className="size-4 text-muted-foreground" />
-              Tasks
-            </CardTitle>
-            <CardDescription>
-              {progress.done} of {progress.total} done
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Progress value={progress.percent} />
-            <p className="text-xs text-muted-foreground">{progress.percent}% complete</p>
-          </CardContent>
-        </Card>
+        <WorkspaceProgress
+          workspaceId={workspace.id}
+          initialDone={progress.done}
+          initialTotal={progress.total}
+          initialPercent={progress.percent}
+        />
 
         <Card>
           <CardHeader>

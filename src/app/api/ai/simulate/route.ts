@@ -3,6 +3,7 @@ import { z } from "zod";
 import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
 import { getCurrentUser } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { getDb } from "@/lib/prisma";
 import { isAiConfigured } from "@/lib/env";
 import { buildSimulationPrompt } from "@/lib/ai/simulation-prompts";
@@ -106,7 +107,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ text: result.text });
   } catch (error) {
-    console.error("[/api/ai/simulate]", error);
+      logger.error("Simulate API error", { error: String(error) });
     return NextResponse.json(
       { error: "Internal server error." },
       { status: 500 },

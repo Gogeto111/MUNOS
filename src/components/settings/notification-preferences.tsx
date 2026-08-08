@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -11,37 +11,55 @@ import {
   Mail,
   Calendar,
   Award,
-  MessageSquare,
   Star,
   Save,
+  Loader2,
 } from "lucide-react";
-
-interface NotificationSettings {
-  eventReminders: boolean;
-  emailNotifications: boolean;
-  certificateUploads: boolean;
-  newFeatures: boolean;
-  reviewNotifications: boolean;
-  workspaceUpdates: boolean;
-  socialActivity: boolean;
-  weeklyDigest: boolean;
-}
+import { toast } from "sonner";
+import { getNotificationSettings, updateNotificationSettings } from "@/lib/actions/settings";
 
 export function NotificationPreferences() {
-  const [settings, setSettings] = useState<NotificationSettings>({
+  const [settings, setSettings] = useState({
+    notificationsEnabled: true,
     eventReminders: true,
     emailNotifications: true,
     certificateUploads: true,
     newFeatures: true,
-    reviewNotifications: false,
-    workspaceUpdates: true,
-    socialActivity: false,
-    weeklyDigest: true,
   });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const toggle = (key: keyof NotificationSettings) => {
+  useEffect(() => {
+    getNotificationSettings().then((result) => {
+      if (result.status === "success" && result.data) {
+        setSettings(result.data);
+      }
+      setLoading(false);
+    });
+  }, []);
+
+  const toggle = (key: keyof typeof settings) => {
     setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
   };
+
+  const handleSave = async () => {
+    setSaving(true);
+    const result = await updateNotificationSettings(settings);
+    if (result.status === "success") {
+      toast.success("Preferences saved.");
+    } else {
+      toast.error(result.message);
+    }
+    setSaving(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -52,6 +70,19 @@ export function NotificationPreferences() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Bell className="size-4 text-muted-foreground" />
+              <div>
+                <Label className="text-sm">Push Notifications</Label>
+                <p className="text-xs text-muted-foreground">Enable in-app notifications</p>
+              </div>
+            </div>
+            <Switch checked={settings.notificationsEnabled} onCheckedChange={() => toggle("notificationsEnabled")} />
+          </div>
+
+          <Separator />
+
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Calendar className="size-4 text-muted-foreground" />
@@ -101,38 +132,13 @@ export function NotificationPreferences() {
             </div>
             <Switch checked={settings.newFeatures} onCheckedChange={() => toggle("newFeatures")} />
           </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <MessageSquare className="size-4 text-muted-foreground" />
-              <div>
-                <Label className="text-sm">Social Activity</Label>
-                <p className="text-xs text-muted-foreground">Notifications for follows, messages, and mentions</p>
-              </div>
-            </div>
-            <Switch checked={settings.socialActivity} onCheckedChange={() => toggle("socialActivity")} />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Bell className="size-4 text-muted-foreground" />
-              <div>
-                <Label className="text-sm">Weekly Digest</Label>
-                <p className="text-xs text-muted-foreground">Summary of your MUN activity each week</p>
-              </div>
-            </div>
-            <Switch checked={settings.weeklyDigest} onCheckedChange={() => toggle("weeklyDigest")} />
-          </div>
         </CardContent>
       </Card>
 
       <div className="flex justify-end">
-        <Button className="gap-2">
-          <Save className="size-3.5" /> Save Preferences
+        <Button className="gap-2" onClick={handleSave} disabled={saving}>
+          {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
+          {saving ? "Saving..." : "Save Preferences"}
         </Button>
       </div>
     </div>

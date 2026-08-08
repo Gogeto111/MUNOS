@@ -1,18 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Calendar,
-  Clock,
-  FolderKanban,
+  Loader2,
   Users,
-  BarChart3,
-  Award,
+  FolderKanban,
+  Plus,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getOrganizerStats, getOrganizerConferences } from "@/lib/actions/organizer";
-import { colorClasses } from "@/lib/colors";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
+import {
+  getOrganizerStats,
+  getOrganizerConferences,
+  getConferenceRegistrations,
+} from "@/lib/actions/organizer";
+import { BulkCertsButton } from "@/components/organizer/bulk-certs-button";
 
 interface ConferenceData {
   id: string;
@@ -27,184 +41,182 @@ interface ConferenceData {
   _count: { workspaces: number; committees: number };
 }
 
+interface Registration {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  country: string | null;
+  registeredAt: string;
+  workspaceId: string;
+}
+
 export default function OrganizerPage() {
-  const [activeTab, setActiveTab] = useState<"overview" | "conferences" | "registrations" | "certificates" | "analytics">("overview");
-  const [stats, setStats] = useState({
-    totalConferences: 0,
-    totalDelegates: 0,
-    totalCertificates: 0,
-    totalWorkspaces: 0,
-    upcomingConferences: 0,
-  });
+  const [stats, setStats] = useState({ totalConferences: 0, totalDelegates: 0, totalCertificates: 0, totalWorkspaces: 0, upcomingConferences: 0 });
   const [conferences, setConferences] = useState<ConferenceData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedConfId, setSelectedConfId] = useState("");
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [loadingRegs, setLoadingRegs] = useState(false);
 
   useEffect(() => {
-    Promise.all([getOrganizerStats(), getOrganizerConferences()]).then(([statsResult, confResult]) => {
-      if (statsResult.status === "success" && statsResult.data) {
-        setStats(statsResult.data);
-      }
-      if (confResult.status === "success" && confResult.data) {
-        setConferences(confResult.data);
-      }
+    Promise.all([getOrganizerStats(), getOrganizerConferences()]).then(([s, c]) => {
+      if (s.status === "success" && s.data) setStats(s.data);
+      if (c.status === "success" && c.data) setConferences(c.data);
       setLoading(false);
     });
   }, []);
 
+  const loadRegistrations = async (confId: string) => {
+    setSelectedConfId(confId);
+    if (!confId) { setRegistrations([]); return; }
+    setLoadingRegs(true);
+    const r = await getConferenceRegistrations(confId);
+    if (r.status === "success" && r.data) setRegistrations(r.data);
+    else toast.error(r.message);
+    setLoadingRegs(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <div className="mx-auto max-w-6xl px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Organizer Dashboard</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {loading ? "Loading..." : "Manage conferences, registrations, certificates, and analytics."}
-          </p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Organizer</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {loading ? "Loading..." : "Manage conferences and view delegate registrations."}
+            </p>
+          </div>
+          <Link href="/organizer/create">
+            <Button>
+              <Plus className="size-4" />
+              Create Conference
+            </Button>
+          </Link>
         </div>
 
-        <div className="flex gap-2 mb-6 border-b border-border/60">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
           {[
-            { label: "Overview", value: "overview" },
-            { label: "Conferences", value: "conferences" },
-            { label: "Registrations", value: "registrations" },
-            { label: "Certificates", value: "certificates" },
-            { label: "Analytics", value: "analytics" },
-          ].map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setActiveTab(tab.value as never)}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.value
-                  ? "border-brand-500 text-brand-600 dark:text-brand-400"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tab.label}
-            </button>
+            { label: "Conferences", value: stats.totalConferences, icon: FolderKanban },
+            { label: "Delegates", value: stats.totalDelegates, icon: Users },
+            { label: "Certificates", value: stats.totalCertificates, icon: Users },
+            { label: "Upcoming", value: stats.upcomingConferences, icon: Calendar },
+          ].map((s) => (
+            <Card key={s.label}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="grid size-10 place-items-center rounded-lg bg-muted/60">
+                    <s.icon className="size-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold tabular-nums">{s.value}</p>
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
 
-        {activeTab === "overview" && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {[
-              { label: "Total Conferences", value: stats.totalConferences, icon: FolderKanban, color: "brand" },
-              { label: "Total Delegates", value: stats.totalDelegates, icon: Users, color: "emerald" },
-              { label: "Certificates", value: stats.totalCertificates, icon: Award, color: "amber" },
-              { label: "Workspaces", value: stats.totalWorkspaces, icon: FolderKanban, color: "brand" },
-              { label: "Upcoming", value: stats.upcomingConferences, icon: Clock, color: "red" },
-            ].map((stat) => (
-              <Card key={stat.label}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`grid size-10 place-items-center rounded-lg ${colorClasses(stat.color).bg} ${colorClasses(stat.color).text}`}>
-                      <stat.icon className="size-5" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold tabular-nums">{stat.value.toLocaleString()}</p>
-                      <p className="text-xs text-muted-foreground">{stat.label}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {activeTab === "conferences" && (
+        <div className="grid gap-6 lg:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle>Conferences</CardTitle>
+              <CardTitle className="text-sm font-semibold">Conferences</CardTitle>
             </CardHeader>
             <CardContent>
               {conferences.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  No conferences found. Create one in the admin panel.
-                </p>
+                <div className="py-8 text-center">
+                  <p className="text-sm text-muted-foreground mb-4">No conferences yet.</p>
+                  <Link href="/organizer/create">
+                    <Button variant="outline" size="sm">
+                      <Plus className="size-4" />
+                      Create Your First Conference
+                    </Button>
+                  </Link>
+                </div>
               ) : (
-                <div className="space-y-3">
-                  {conferences.map((conf) => (
-                    <div key={conf.id} className="flex items-center justify-between rounded-lg border border-border/60 p-4">
-                      <div>
-                        <p className="font-semibold">{conf.name}</p>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Calendar className="size-3" /> {new Date(conf.startDate).toLocaleDateString()} — {new Date(conf.endDate).toLocaleDateString()}
+                <ScrollArea className="h-[40vh]">
+                  <div className="space-y-2">
+                    {conferences.map((c) => (
+                      <div key={c.id} className="rounded-lg border border-border/60 p-3">
+                        <p className="text-sm font-medium">{c.name}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {new Date(c.startDate).toLocaleDateString()} — {new Date(c.endDate).toLocaleDateString()} • {c.city}, {c.country}
                         </p>
-                        <p className="text-xs text-muted-foreground">{conf.city}, {conf.country}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="text-right text-xs text-muted-foreground">
-                          <p>{conf._count.workspaces} workspaces</p>
-                          <p>{conf._count.committees} committees</p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <Badge variant={c.published ? "default" : "outline"} className="text-[10px]">
+                            {c.published ? "Live" : "Draft"}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground">
+                            {c._count.workspaces} delegates
+                          </span>
+                          {c.registrationOpen && (
+                            <Badge variant="secondary" className="text-[10px]">
+                              Registration Open
+                            </Badge>
+                          )}
                         </div>
-                        <Badge variant={conf.published ? "default" : "outline"}>
-                          {conf.published ? "Published" : "Draft"}
-                        </Badge>
+                        <div className="mt-2">
+                          <BulkCertsButton
+                            conferenceId={c.id}
+                            delegateCount={c._count.workspaces}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Users className="size-4" /> Delegate Registrations
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="max-w-sm">
+                <Select value={selectedConfId} onValueChange={loadRegistrations}>
+                  <SelectTrigger><SelectValue placeholder="Select a conference" /></SelectTrigger>
+                  <SelectContent>
+                    {conferences.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {loadingRegs && <div className="flex justify-center py-8"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>}
+
+              {!loadingRegs && selectedConfId && registrations.length === 0 && (
+                <p className="py-8 text-center text-sm text-muted-foreground">No registrations for this conference.</p>
+              )}
+
+              {!loadingRegs && registrations.length > 0 && (
+                <ScrollArea className="h-[35vh]">
+                  <div className="space-y-2">
+                    {registrations.map((r) => (
+                      <div key={r.workspaceId} className="flex items-center justify-between rounded-lg border border-border/60 p-3">
+                        <div>
+                          <p className="text-sm font-medium">{r.firstName ?? "Unknown"} {r.lastName ?? ""}</p>
+                          <p className="text-[10px] text-muted-foreground">{r.email} {r.country && `• ${r.country}`}</p>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">{new Date(r.registeredAt).toLocaleDateString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+
+              {!selectedConfId && !loadingRegs && (
+                <div className="flex flex-col items-center py-12 text-center">
+                  <Users className="mb-4 size-10 text-muted-foreground" />
+                  <p className="text-sm font-medium">Select a conference above to view delegates.</p>
                 </div>
               )}
             </CardContent>
           </Card>
-        )}
-
-        {activeTab === "registrations" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Registration Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground text-center py-8">
-                Registration data is tracked via workspaces. Select a conference above to view its registrations.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {activeTab === "certificates" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Certificates</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground text-center py-8">
-                Select a conference and delegate to generate certificates. Use the organizer actions to issue certificates.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {activeTab === "analytics" && (
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="size-5 text-brand-600" /> Registration Trends
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <BarChart3 className="mb-4 size-10 text-muted-foreground" />
-                  <p className="text-sm font-medium">No registration data yet</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Charts will populate as delegates register for your conferences.</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="size-5 text-emerald-600" /> Delegate Demographics
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Users className="mb-4 size-10 text-muted-foreground" />
-                  <p className="text-sm font-medium">No demographics data yet</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Delegate location data will appear as registrations come in.</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

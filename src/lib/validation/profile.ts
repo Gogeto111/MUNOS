@@ -17,8 +17,8 @@ const optionalYear = z
   .max(4)
   .optional()
   .refine((v) => !v || /^\d{4}$/.test(v), { message: "Enter a year like 2025" })
-  .refine((v) => !v || (Number(v) >= 1950 && Number(v) <= 2100), {
-    message: "Year must be between 1950 and 2100",
+  .refine((v) => !v || (Number(v) >= 1950 && Number(v) <= new Date().getFullYear()), {
+    message: `Year must be between 1950 and ${new Date().getFullYear()}`,
   });
 
 export const personalInfoSchema = z.object({

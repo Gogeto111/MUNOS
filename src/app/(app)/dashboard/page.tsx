@@ -1,8 +1,10 @@
 import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import { getProfileCompletion, type ProfileCompletionInput } from "@/lib/profile";
 import {
   Card,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -11,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { ActivityFeed } from "@/components/dashboard/activity-feed";
+import { QuickStats } from "@/components/dashboard/quick-stats";
 
 export const metadata = { title: "Dashboard | MUNOS" };
 
@@ -62,6 +66,7 @@ export default async function DashboardPage() {
       username: user.username,
       phoneNumber: user.phoneNumber,
       school: user.school,
+      university: user.university,
       grade: user.grade,
       city: user.city,
       state: user.state,
@@ -75,7 +80,6 @@ export default async function DashboardPage() {
       countriesCount: counts?._count.countries ?? 0,
       awardsCount: counts?._count.awards ?? 0,
       certificatesCount: counts?._count.certificates ?? 0,
-      socialLinksCount: counts?._count.socialLinks ?? 0,
     };
 
     const completion = getProfileCompletion(input);
@@ -88,8 +92,7 @@ export default async function DashboardPage() {
               {user.firstName ? `Welcome, ${user.firstName}` : "Welcome"}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              This is your MUNOS dashboard. Profile, portfolio, and certificates
-              are coming next.
+              This is your MUNOS dashboard. Manage your profile, portfolio, certificates, and more from the sidebar.
             </p>
           </div>
           <Badge variant="outline" className="capitalize">
@@ -145,10 +148,38 @@ export default async function DashboardPage() {
             </CardHeader>
           </Card>
         </div>
+
+        <QuickStats />
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <ActivityFeed />
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Quick links
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button asChild variant="ghost" className="w-full justify-start text-sm">
+                <Link href="/workspaces">Workspaces</Link>
+              </Button>
+              <Button asChild variant="ghost" className="w-full justify-start text-sm">
+                <Link href="/simulator">Simulator</Link>
+              </Button>
+              <Button asChild variant="ghost" className="w-full justify-start text-sm">
+                <Link href="/portfolio">Portfolio</Link>
+              </Button>
+              <Button asChild variant="ghost" className="w-full justify-start text-sm">
+                <Link href="/social">Social Feed</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   } catch (error) {
-    console.error("[Dashboard]", error);
+    logger.error("Dashboard page error", { error: String(error) });
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
         <h2 className="text-lg font-semibold">Something went wrong</h2>

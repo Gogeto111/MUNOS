@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getUserPortfolio } from "@/lib/actions/profile";
 import { colorClasses } from "@/lib/colors";
+import { toast } from "sonner";
 
 interface PortfolioData {
   name: string;
@@ -59,7 +60,18 @@ export default function PortfolioPage() {
             Your public MUN portfolio, generated from your profile data.
           </p>
         </div>
-        <Button variant="outline" className="gap-2">
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(window.location.href);
+              toast.success("Portfolio link copied to clipboard!");
+            } catch {
+              toast.error("Failed to copy link.");
+            }
+          }}
+        >
           <Share2 className="size-3.5" /> Share Portfolio
         </Button>
       </div>

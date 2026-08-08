@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Award,
@@ -13,6 +13,7 @@ import {
   FlaskConical,
   FolderKanban,
   LayoutDashboard,
+  Loader2,
   MessageSquare,
   Newspaper,
   Search,
@@ -26,6 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { colorClasses } from "@/lib/colors";
+import { getSystemStatus, getRecentActivity } from "@/lib/actions/os";
 
 const modules = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, color: "brand", description: "Overview and quick actions" },
@@ -46,6 +48,21 @@ const modules = [
 
 export default function OSPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [systemStatus, setSystemStatus] = useState<Array<{ name: string; status: string; color: string }>>([]);
+  const [recentActivity, setRecentActivity] = useState<Array<{ message: string; type: string; createdAt: string }>>([]);
+  const [loadingStatus, setLoadingStatus] = useState(true);
+
+  useEffect(() => {
+    Promise.all([getSystemStatus(), getRecentActivity()]).then(([statusResult, activityResult]) => {
+      if (statusResult.status === "success" && statusResult.data) {
+        setSystemStatus(statusResult.data);
+      }
+      if (activityResult.status === "success" && activityResult.data) {
+        setRecentActivity(activityResult.data);
+      }
+      setLoadingStatus(false);
+    });
+  }, []);
 
   const filteredModules = modules.filter(
     (m) =>
@@ -122,13 +139,38 @@ export default function OSPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Clock className="mb-4 size-10 text-muted-foreground" />
-                <p className="text-sm font-medium">No activity yet</p>
-                <p className="mt-1 text-xs text-muted-foreground max-w-sm">
-                  Your recent activity across MUNOS modules will appear here.
-                </p>
-              </div>
+              {loadingStatus ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : recentActivity.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Clock className="mb-4 size-10 text-muted-foreground" />
+                  <p className="text-sm font-medium">No activity yet</p>
+                  <p className="mt-1 text-xs text-muted-foreground max-w-sm">
+                    Your recent activity across MUNOS modules will appear here.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentActivity.map((activity, i) => (
+                    <div key={i} className="flex items-center gap-3 rounded-lg border border-border/60 p-3">
+                      <div className="grid size-8 place-items-center rounded-full bg-muted/60 text-xs">
+                        {activity.type === "POST" ? <MessageSquare className="size-4" /> :
+                         activity.type === "SIMULATION" ? <FlaskConical className="size-4" /> :
+                         activity.type === "CERTIFICATE" ? <FileBadge className="size-4" /> :
+                         <Clock className="size-4" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm truncate">{activity.message}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {new Date(activity.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -170,12 +212,11 @@ export default function OSPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {[
-                  { name: "AI Engine", status: "Online", color: "emerald" },
-                  { name: "Research DB", status: "Online", color: "emerald" },
-                  { name: "News Feeds", status: "Online", color: "emerald" },
-                  { name: "Video Coach", status: "Online", color: "emerald" },
-                ].map((s) => (
+                {loadingStatus ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : systemStatus.map((s) => (
                   <div key={s.name} className="flex items-center justify-between text-sm">
                     <span>{s.name}</span>
                     <div className="flex items-center gap-1.5">

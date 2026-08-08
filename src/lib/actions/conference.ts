@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth";
+import { requireUser, getCurrentUser } from "@/lib/auth";
 import { isAuthConfigured } from "@/lib/public-env";
 import { ok, fail, toActionError, type ActionState } from "@/lib/actions";
 import { slugify } from "@/lib/format";
@@ -604,6 +604,302 @@ export async function listOrganizers(): Promise<ActionState<{ id: string; name: 
       orderBy: { name: "asc" },
     });
     return ok("ok", organizers);
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Registration
+// ---------------------------------------------------------------------------
+
+export async function registerForConference(
+  conferenceId: string,
+): Promise<ActionState<{ workspaceId: string }>> {
+  try {
+    const user = await requireUser();
+
+    const conference = await getDb().conference.findUnique({
+      where: { id: conferenceId },
+      select: { id: true, name: true, registrationOpen: true, capacity: true },
+    });
+    if (!conference) return fail("Conference not found.");
+    if (!conference.registrationOpen) return fail("Registration is closed for this conference.");
+
+    if (conference.capacity) {
+      const count = await getDb().workspace.count({
+        where: { conferenceId, userId: user.id },
+      });
+      if (count === 0) {
+        const total = await getDb().workspace.count({ where: { conferenceId } });
+        if (total >= conference.capacity) {
+          return fail("This conference has reached its capacity.");
+        }
+      }
+    }
+
+    const existing = await getDb().workspace.findFirst({
+      where: { conferenceId, userId: user.id },
+      select: { id: true },
+    });
+    if (existing) {
+      return ok("You are already registered.", { workspaceId: existing.id });
+    }
+
+    const workspace = await getDb().workspace.create({
+      data: {
+        userId: user.id,
+        conferenceId,
+        title: conference.name,
+      },
+      select: { id: true },
+    });
+
+    revalidatePath(`/conference/${conferenceId}`);
+    revalidatePath("/discover");
+    return ok("Registered successfully!", { workspaceId: workspace.id });
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function isRegisteredForConference(
+  conferenceId: string,
+): Promise<ActionState<{ registered: boolean; workspaceId: string | null }>> {
+  try {
+    const user = await requireUser();
+    const workspace = await getDb().workspace.findFirst({
+      where: { conferenceId, userId: user.id },
+      select: { id: true },
+    });
+    return ok("ok", {
+      registered: !!workspace,
+      workspaceId: workspace?.id ?? null,
+    });
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function getConferenceAttendeeCount(
+  conferenceId: string,
+): Promise<ActionState<{ count: number }>> {
+  try {
+    const count = await getDb().workspace.count({ where: { conferenceId } });
+    return ok("ok", { count });
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function getMyRegisteredConferences(): Promise<ActionState<
+  { id: string; name: string; slug: string; startDate: Date; endDate: Date; workspaceId: string }[]
+>> {
+  try {
+    const user = await requireUser();
+    const workspaces = await getDb().workspace.findMany({
+      where: { userId: user.id, conferenceId: { not: null } },
+      select: {
+        id: true,
+        conference: {
+          select: { id: true, name: true, slug: true, startDate: true, endDate: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const result = workspaces
+      .filter((w) => w.conference)
+      .map((w) => ({
+        id: w.conference!.id,
+        name: w.conference!.name,
+        slug: w.conference!.slug,
+        startDate: w.conference!.startDate,
+        endDate: w.conference!.endDate,
+        workspaceId: w.id,
+      }));
+
+    return ok("ok", result);
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// FAQ
+// ---------------------------------------------------------------------------
+
+export async function submitFaqQuestion(
+  conferenceId: string,
+  question: string,
+): Promise<ActionState> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return fail("Sign in required.");
+
+    const trimmed = question.trim();
+    if (!trimmed) return fail("Question cannot be empty.");
+
+    const conference = await getDb().conference.findUnique({
+      where: { id: conferenceId },
+      select: { id: true, name: true, organizerId: true },
+    });
+    if (!conference) return fail("Conference not found.");
+
+    await getDb().notification.create({
+      data: {
+        userId: conference.organizerId ?? user.id,
+        type: "SYSTEM",
+        title: `New question: ${conference.name}`,
+        body: `${[user.firstName, user.lastName].filter(Boolean).join(" ") || "Anonymous"} asked: ${trimmed}`,
+      },
+    });
+
+    return ok("Question sent to the organizer.");
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Committee Assignment
+// ---------------------------------------------------------------------------
+
+export async function assignToCommittee(
+  workspaceId: string,
+  committeeId: string,
+): Promise<ActionState> {
+  try {
+    const user = await requireUser();
+
+    const workspace = await getDb().workspace.findFirst({
+      where: { id: workspaceId, userId: user.id },
+      select: { id: true, conferenceId: true },
+    });
+    if (!workspace) return fail("Workspace not found.");
+    if (!workspace.conferenceId) return fail("This workspace is not linked to a conference.");
+
+    const committee = await getDb().conferenceCommittee.findFirst({
+      where: { id: committeeId, conferenceId: workspace.conferenceId },
+      select: { id: true, name: true, topic: true, maxDelegates: true },
+    });
+    if (!committee) return fail("Committee not found for this conference.");
+
+    if (committee.maxDelegates) {
+      const assigned = await getDb().workspaceCommittee.count({
+        where: { workspace: { conferenceId: workspace.conferenceId }, name: committee.name },
+      });
+      if (assigned >= committee.maxDelegates) {
+        return fail("This committee has reached its maximum delegates.");
+      }
+    }
+
+    await getDb().workspaceCommittee.upsert({
+      where: { id: workspaceId },
+      create: {
+        workspaceId,
+        name: committee.name,
+        topic: committee.topic,
+      },
+      update: {
+        name: committee.name,
+        topic: committee.topic,
+      },
+    });
+
+    revalidatePath(`/conference/${workspace.conferenceId}`);
+    revalidatePath("/workspaces");
+    return ok(`Assigned to ${committee.name}.`);
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function removeFromCommittee(
+  workspaceId: string,
+): Promise<ActionState> {
+  try {
+    const user = await requireUser();
+    const workspace = await getDb().workspace.findFirst({
+      where: { id: workspaceId, userId: user.id },
+      select: { id: true, conferenceId: true },
+    });
+    if (!workspace) return fail("Workspace not found.");
+
+    await getDb().workspaceCommittee.deleteMany({ where: { workspaceId } });
+
+    revalidatePath(`/conference/${workspace.conferenceId}`);
+    revalidatePath("/workspaces");
+    return ok("Removed from committee.");
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function getCommitteeAssignments(
+  committeeId: string,
+): Promise<ActionState<{ workspaceId: string; userName: string | null; userAvatar: string | null }[]>> {
+  try {
+    const committee = await getDb().conferenceCommittee.findUnique({
+      where: { id: committeeId },
+      select: { id: true, name: true, conferenceId: true },
+    });
+    if (!committee) return fail("Committee not found.");
+
+    const workspaces = await getDb().workspaceCommittee.findMany({
+      where: {
+        name: committee.name,
+        workspace: { conferenceId: committee.conferenceId },
+      },
+      select: {
+        workspace: {
+          select: {
+            id: true,
+            user: {
+              select: { firstName: true, lastName: true, avatarUrl: true },
+            },
+          },
+        },
+      },
+    });
+
+    return ok(
+      "ok",
+      workspaces.map((wc) => ({
+        workspaceId: wc.workspace.id,
+        userName: [wc.workspace.user.firstName, wc.workspace.user.lastName]
+          .filter(Boolean)
+          .join(" ") || null,
+        userAvatar: wc.workspace.user.avatarUrl,
+      })),
+    );
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function getMyCommitteeAssignment(
+  workspaceId: string,
+): Promise<ActionState<{ committeeName: string; topic: string | null; country: string | null } | null>> {
+  try {
+    const user = await requireUser();
+    const workspace = await getDb().workspace.findFirst({
+      where: { id: workspaceId, userId: user.id },
+      select: { id: true },
+    });
+    if (!workspace) return fail("Workspace not found.");
+
+    const assignment = await getDb().workspaceCommittee.findFirst({
+      where: { workspaceId },
+      select: { name: true, topic: true, country: true },
+    });
+
+    return ok(
+      "ok",
+      assignment
+        ? { committeeName: assignment.name, topic: assignment.topic, country: assignment.country }
+        : null,
+    );
   } catch (error) {
     return toActionError(error);
   }

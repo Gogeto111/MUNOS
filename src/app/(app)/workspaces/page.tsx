@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FolderTree, Plus } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import { CreateWorkspaceForm } from "@/components/workspace/create-workspace-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -136,7 +137,7 @@ export default async function WorkspacesPage() {
       </div>
     );
   } catch (error) {
-    console.error("[Workspaces]", error);
+    logger.error("Workspaces page error", { error: String(error) });
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
         <h2 className="text-lg font-semibold">Something went wrong</h2>

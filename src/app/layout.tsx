@@ -5,6 +5,8 @@ import { publicEnv, isAuthConfigured } from "@/lib/public-env";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { ClerkThemedProvider } from "@/providers/clerk-provider";
 import { Toaster } from "@/components/shared/toaster";
+import { CommandPalette } from "@/components/shared/command-palette";
+import { KeyboardShortcuts } from "@/components/shared/keyboard-shortcuts";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -22,19 +24,24 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(publicEnv.NEXT_PUBLIC_APP_URL),
   title: {
-    default: `${APP_NAME} — ${APP_DESCRIPTION}`,
-    template: `%s`,
+    default: `${APP_NAME} — Model United Nations Operating System`,
+    template: `%s | ${APP_NAME}`,
   },
-  description: APP_DESCRIPTION,
+  description:
+    "The all-in-one platform for MUN conferences, AI-powered debate practice, and delegate analytics. Research, simulate, connect, and track your delegate journey.",
   keywords: [
-    "Model United Nations",
     "MUN",
-    "MUNOS",
-    "delegate",
+    "Model United Nations",
+    "debate",
     "conference",
+    "simulation",
+    "delegate",
     "committee",
     "portfolio",
     "diplomacy",
+    "AI",
+    "research",
+    "analytics",
   ],
   authors: [{ name: "MUNOS" }],
   creator: "MUNOS",
@@ -44,13 +51,17 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: publicEnv.NEXT_PUBLIC_APP_URL,
     siteName: APP_NAME,
-    title: `${APP_NAME} — The Operating System for Model United Nations`,
-    description: APP_DESCRIPTION,
+    title: `${APP_NAME} — Model United Nations Operating System`,
+    description:
+      "The all-in-one platform for MUN conferences, AI-powered debate practice, and delegate analytics.",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "MUNOS" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: `${APP_NAME} — The Operating System for Model United Nations`,
-    description: APP_DESCRIPTION,
+    title: `${APP_NAME} — Model United Nations Operating System`,
+    description:
+      "The all-in-one platform for MUN conferences, AI-powered debate practice, and delegate analytics.",
+    images: ["/opengraph-image"],
   },
   robots: {
     index: true,
@@ -88,6 +99,8 @@ export default function RootLayout({
             children
           )}
           <Toaster />
+          <CommandPalette />
+          <KeyboardShortcuts />
         </ThemeProvider>
       </body>
     </html>

@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import { WorkspaceLayout } from "@/components/workspace/workspace-layout";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -63,22 +65,28 @@ export default async function WorkspaceDetailPage({
       take: 100,
     });
 
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{workspace.title}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {workspace.description || "Personal conference workspace"}
-            </p>
+      return (
+        <div className="space-y-6">
+          <Breadcrumbs
+            items={[
+              { label: "Workspaces", href: "/workspaces" },
+              { label: workspace.title },
+            ]}
+          />
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">{workspace.title}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {workspace.description || "Personal conference workspace"}
+              </p>
+            </div>
+            {workspace.conference ? (
+              <Badge variant="secondary" className="max-w-60 truncate">
+                {workspace.conference.name}
+                {workspace.conference.city ? ` · ${workspace.conference.city}` : ""}
+              </Badge>
+            ) : null}
           </div>
-          {workspace.conference ? (
-            <Badge variant="secondary" className="max-w-60 truncate">
-              {workspace.conference.name}
-              {workspace.conference.city ? ` · ${workspace.conference.city}` : ""}
-            </Badge>
-          ) : null}
-        </div>
 
         <WorkspaceLayout
           workspace={{
@@ -105,7 +113,7 @@ export default async function WorkspaceDetailPage({
       </div>
     );
   } catch (error) {
-    console.error("[WorkspaceDetail]", error);
+    logger.error("Workspace detail error", { error: String(error) });
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
         <h2 className="text-lg font-semibold">Something went wrong</h2>

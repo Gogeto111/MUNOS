@@ -9,6 +9,7 @@ import { Logo } from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/shared/mode-toggle";
 import { AuthNav } from "@/components/marketing/auth-nav";
+import { GlobalSearch } from "@/components/search/global-search";
 
 const NAV_ITEMS = [
   { href: "/discover", label: "Discover", icon: Compass },
@@ -50,6 +51,7 @@ export function ExploreHeader() {
         </div>
 
         <div className="flex items-center gap-1.5">
+          <GlobalSearch className="hidden w-56 md:block" />
           <ModeToggle />
           <div className="hidden items-center gap-2 md:flex">
             <AuthNav />

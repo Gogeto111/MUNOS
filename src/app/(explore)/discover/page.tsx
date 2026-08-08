@@ -3,6 +3,7 @@ import { CalendarSearch, Compass, X } from "lucide-react";
 import { getDb } from "@/lib/prisma";
 import { ConferenceCard } from "@/components/conference/conference-card";
 import { DiscoverToolbar } from "@/components/explore/discover-toolbar";
+import { SearchAutocomplete } from "@/components/explore/search-autocomplete";
 import { Container } from "@/components/shared/container";
 import {
   parseDiscoverFilters,
@@ -175,6 +176,7 @@ export default async function DiscoverPage({
           </div>
 
           <div className="mx-auto mt-8 max-w-4xl pb-8">
+            <SearchAutocomplete className="mb-6" />
             <DiscoverToolbar filters={filters} facets={facets} />
           </div>
         </Container>

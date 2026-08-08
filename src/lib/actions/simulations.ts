@@ -4,6 +4,8 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
 import { ok, fail, type ActionState } from "@/lib/actions";
+import { generateObject } from "ai";
+import { google } from "@ai-sdk/google";
 
 const SimulationInputSchema = z.object({
   conferenceId: z.string().min(1),
@@ -62,7 +64,11 @@ export async function sendMessage(
     if (simulation.userId !== user.id) return fail("Not your simulation.");
     if (simulation.status !== "RUNNING") return fail("Simulation is not active.");
 
-    const assistantContent = generateMockResponse(content, simulation.country ?? "", simulation.topic ?? "", "intermediate");
+    const assistantContent = await generateAIResponse(
+      content,
+      simulation.country ?? "",
+      simulation.topic ?? "",
+    );
     const newScore = Math.min(100, simulation.totalSpeechCount + 1);
 
     await db.committeeSimulation.update({
@@ -100,30 +106,30 @@ export async function getSimulation(
   }
 }
 
-function generateMockResponse(
+async function generateAIResponse(
   userMessage: string,
   country: string,
   topic: string,
-  difficulty: string,
-): string {
-  const responses: Record<string, string[]> = {
-    beginner: [
-      `Thank you for that statement. As the delegate of ${country}, we believe that cooperation is essential for addressing ${topic}.`,
-      `The delegate of ${country} would like to respond to the previous point. We think further discussion is needed on this matter.`,
-      `As ${country}, we support the general consensus on ${topic} but urge the committee to consider all perspectives.`,
-    ],
-    intermediate: [
-      `The delegation of ${country} recognizes the complexity of ${topic}. We propose that the committee establish a working group to address the specific challenges raised.`,
-      `Building on the previous statement, ${country} would like to emphasize that multilateral cooperation is the only viable path forward for ${topic}.`,
-      `${country} strongly advocates for a resolution that balances national sovereignty with collective action on ${topic}.`,
-    ],
-    advanced: [
-      `The distinguished delegation of ${country} would like to address the procedural point raised. Under Rule 38, we believe the committee should consider amendments to the draft resolution before proceeding to a vote on ${topic}.`,
-      `${country}'s position on ${topic} is grounded in Article 2(4) of the UN Charter. We propose an amendment that establishes a monitoring framework with quarterly reviews.`,
-      `The delegate of ${country} motions for a moderated caucus under the topic ${topic}. We believe this is essential before the committee proceeds to voting procedure.`,
-    ],
-  };
+): Promise<string> {
+  const responseSchema = z.object({
+    response: z.string().describe("The AI delegate's speech response"),
+  });
 
-  const pool = responses[difficulty] ?? responses.intermediate;
-  return pool[Math.floor(Math.random() * pool.length)]!;
+  const prompt =
+    `You are simulating an MUN delegate from ${country} in a committee session about "${topic}". ` +
+    `The user (also a delegate) just said: "${userMessage.trim().slice(0, 2000)}"\n\n` +
+    `Respond as a realistic MUN delegate from ${country}. Be specific about your country's position, ` +
+    `use diplomatic language, reference relevant UN frameworks, and engage with what was said. ` +
+    `Keep your response between 100-300 words. Do NOT break character.`;
+
+  try {
+    const { object } = await generateObject({
+      model: google(process.env.AI_MODEL ?? "gemini-2.5-flash"),
+      schema: responseSchema,
+      prompt,
+    });
+    return object.response;
+  } catch {
+    return `The delegate of ${country} acknowledges the previous statement on "${topic}" and would like to emphasize the importance of multilateral cooperation in addressing this issue. We believe that all member states must work together within the framework of the United Nations to find sustainable solutions.`;
+  }
 }

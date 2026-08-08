@@ -2,13 +2,8 @@
 
 import {
   ArrowLeft,
-  Calendar,
-  FileStack,
-  Files,
-  FolderTree,
-  Gavel,
+  FileText,
   LayoutGrid,
-  ListTodo,
   Settings,
   Sparkles,
   type LucideIcon,
@@ -26,14 +21,10 @@ import type {
 } from "@/generated/prisma/browser";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WorkspaceOverview } from "@/components/workspace/workspace-overview";
-import { NotesPanel } from "@/components/workspace/notes-panel";
-import { TasksPanel } from "@/components/workspace/tasks-panel";
-import { TimelinePanel } from "@/components/workspace/timeline-panel";
-import { FilesPanel } from "@/components/workspace/files-panel";
-import { CommitteesPanel } from "@/components/workspace/committees-panel";
-import { ResolutionsPanel } from "@/components/workspace/resolutions-panel";
+import { PositionPapersPanel } from "@/components/workspace/position-papers-panel";
 import { AiCopilotPanel } from "@/components/workspace/ai-copilot-panel";
 import { WorkspaceSettings } from "@/components/workspace/workspace-settings";
+import { ExportButton } from "@/components/workspace/export-button";
 import type { ConferenceOption } from "@/components/workspace/create-workspace-form";
 
 export interface WorkspaceData {
@@ -64,15 +55,9 @@ export function WorkspaceLayout({
     value: string;
     label: string;
     icon: LucideIcon;
-    count?: number;
   }[] = [
     { value: "overview", label: "Overview", icon: LayoutGrid },
-    { value: "notes", label: "Notes", icon: FolderTree, count: workspace.notes.length },
-    { value: "tasks", label: "Tasks", icon: ListTodo, count: workspace.tasks.length },
-    { value: "timeline", label: "Timeline", icon: Calendar, count: workspace.timeline.length },
-    { value: "files", label: "Files", icon: Files, count: workspace.attachments.length },
-    { value: "committees", label: "Committees", icon: FileStack, count: workspace.committees.length },
-    { value: "resolutions", label: "Resolutions", icon: Gavel, count: workspace.resolutions.length },
+    { value: "papers", label: "Position Papers", icon: FileText },
     { value: "ai", label: "AI Copilot", icon: Sparkles },
     { value: "settings", label: "Settings", icon: Settings },
   ];
@@ -87,50 +72,28 @@ export function WorkspaceLayout({
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="flex h-auto flex-wrap justify-start gap-1">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <TabsTrigger key={tab.value} value={tab.value} className="gap-2">
-                <Icon className="size-4" />
-                {tab.label}
-                {typeof tab.count === "number" && tab.count > 0 ? (
-                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs tabular-nums">
-                    {tab.count}
-                  </span>
-                ) : null}
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
+        <div className="flex items-center justify-between">
+          <TabsList className="flex h-auto justify-start gap-1">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <TabsTrigger key={tab.value} value={tab.value} className="gap-2">
+                  <Icon className="size-4" />
+                  {tab.label}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+          <ExportButton workspaceId={workspace.id} workspaceTitle={workspace.title} />
+        </div>
 
         <TabsContent value="overview" className="mt-0">
           <WorkspaceOverview workspace={workspace} />
         </TabsContent>
-        <TabsContent value="notes" className="mt-0">
-          <NotesPanel workspaceId={workspace.id} folders={workspace.folders} notes={workspace.notes} />
-        </TabsContent>
-        <TabsContent value="tasks" className="mt-0">
-          <TasksPanel workspaceId={workspace.id} tasks={workspace.tasks} />
-        </TabsContent>
-        <TabsContent value="timeline" className="mt-0">
-          <TimelinePanel workspaceId={workspace.id} events={workspace.timeline} />
-        </TabsContent>
-        <TabsContent value="files" className="mt-0">
-          <FilesPanel workspaceId={workspace.id} attachments={workspace.attachments} />
-        </TabsContent>
-        <TabsContent value="committees" className="mt-0">
-          <CommitteesPanel
+        <TabsContent value="papers" className="mt-0">
+          <PositionPapersPanel
             workspaceId={workspace.id}
             committees={workspace.committees}
-            resolutions={workspace.resolutions}
-          />
-        </TabsContent>
-        <TabsContent value="resolutions" className="mt-0">
-          <ResolutionsPanel
-            workspaceId={workspace.id}
-            committees={workspace.committees}
-            resolutions={workspace.resolutions}
           />
         </TabsContent>
         <TabsContent value="ai" className="mt-0">

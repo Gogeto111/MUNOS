@@ -131,7 +131,7 @@ export async function syncNewsFeeds(
             }
             if (text.length < 100) continue;
 
-            const stored = await storeDocument({
+            await storeDocument({
               workspaceId: undefined,
               sourceType: "LIVE",
               title: item.title ?? "Untitled",

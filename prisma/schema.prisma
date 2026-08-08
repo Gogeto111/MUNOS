@@ -158,7 +158,14 @@ model User {
   reviews       Review[]
   reminders     Reminder[]
   workspaces Workspace[]
+  assignedTasks WorkspaceTask[]
   simulations CommitteeSimulation[]
+  videoCoachSessions VideoCoachSession[]
+  posts Post[]
+  postComments PostComment[]
+  following UserFollow[] @relation("Following")
+  followers UserFollow[] @relation("Followers")
+  badges AchievementBadge[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -295,6 +302,10 @@ model UserSettings {
   showAwards            Boolean @default(true)
   showCertificates      Boolean @default(true)
   showStats             Boolean @default(true)
+  showActivityStatus    Boolean @default(true)
+  showOnlineStatus      Boolean @default(true)
+  searchEngineIndexing  Boolean @default(true)
+  blockedUserIds        String[] @default([])
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 }
@@ -559,6 +570,93 @@ model Bookmark {
   @@index([conferenceId])
 }
 
+model Post {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content    String   @db.Text
+  imageUrl   String?
+  visibility String   @default("public")
+  createdAt  DateTime @default(now())
+
+  likes PostLike[]
+  comments PostComment[]
+
+  @@index([userId, createdAt])
+}
+
+model PostLike {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
+}
+
+model PostComment {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([postId, createdAt])
+  @@index([userId])
+}
+
+model UserFollow {
+  id          String   @id @default(cuid())
+  followerId  String
+  follower    User     @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+enum BadgeType {
+  FIRST_POST
+  FIRST_SIMULATION
+  TEN_AWARDS
+  CONFERENCE_VETERAN
+  AI_MASTER
+  RESEARCHER
+  DELEGATE_EXCELLENCE
+}
+
+model AchievementBadge {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeType   BadgeType
+  badgeName   String
+  description String
+  earnedAt    DateTime @default(now())
+
+  @@unique([userId, badgeType])
+  @@index([userId])
+}
+
+model MarketplaceItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  url         String
+  category    String
+  icon        String   @default("FileText")
+  createdAt   DateTime @default(now())
+
+  @@index([category])
+}
+
 model Reminder {
   id           String       @id @default(cuid())
   userId       String
@@ -641,6 +739,8 @@ model WorkspaceTask {
   id          String       @id @default(cuid())
   workspaceId String
   workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  assigneeId  String?
+  assignee    User?        @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
   title       String
   description String?      @db.Text
   status      TaskStatus   @default(TODO)
@@ -652,6 +752,7 @@ model WorkspaceTask {
   updatedAt   DateTime     @updatedAt
 
   @@index([workspaceId, status])
+  @@index([assigneeId])
 }
 
 model TimelineEvent {
@@ -919,4 +1020,24 @@ model AiScore {
   createdAt DateTime @default(now())
 
   @@index([workspaceId])
+}
+
+model VideoCoachSession {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  transcript  String?  @db.Text
+  durationSec Float?
+  overall     Int      @default(0)
+  confidence  Int      @default(0)
+  clarity     Int      @default(0)
+  persuasion  Int      @default(0)
+  structure   Int      @default(0)
+  suggestions String[] @default([])
+  rawResult   Json?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt])
 }

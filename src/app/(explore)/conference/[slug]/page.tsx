@@ -1,31 +1,36 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, MapPin, Calendar, DollarSign, Users, Sparkles } from "lucide-react";
+import { MapPin, Calendar, DollarSign, Users, Sparkles } from "lucide-react";
 import { getDb } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { publicEnv, isAuthConfigured } from "@/lib/public-env";
 import { Container } from "@/components/shared/container";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { RegisterButton } from "@/components/conference/register-button";
 import { ConferenceActions } from "@/components/conference/conference-actions";
 import { ConferenceSidebar } from "@/components/conference/conference-sidebar";
 import { CommitteeTabs } from "@/components/conference/committee-tabs";
 import { ConferenceGallery } from "@/components/conference/conference-gallery";
 import { ReviewSection, type ReviewView } from "@/components/conference/review-section";
+import { DifficultyBadge } from "@/components/conference/difficulty-badge";
+import { FaqSection } from "@/components/conference/faq-section";
 import {
   AboutSection,
   AgendaSection,
   BrochuresSection,
   AwardsSection,
-  FaqSection,
 } from "@/components/conference/conference-sections";
+import { AgendaView } from "@/components/conference/agenda-view";
+import { SecretariatSection } from "@/components/conference/secretariat-section";
 import {
   conferenceDetailInclude,
   conferenceDateRange,
   conferenceShareText,
   conferenceShareUrl,
   deriveConference,
-  difficultyLabel,
   formatFee,
   FORMAT_LABELS,
   type ConferenceWithDetail,
@@ -112,12 +117,13 @@ export default async function ConferencePage({
         </div>
 
         <Container className="relative -mt-28 pb-6">
-          <nav className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground" aria-label="Breadcrumb">
-            <Link href="/discover" className="font-medium underline-offset-4 hover:text-foreground hover:underline">
-              Discover
-            </Link>
-            <ChevronRight className="size-4" />
-            <span className="truncate font-medium text-foreground">{conference.name}</span>
+          <nav className="mb-4" aria-label="Breadcrumb">
+            <Breadcrumbs
+              items={[
+                { label: "Discover", href: "/discover" },
+                { label: conference.name },
+              ]}
+            />
           </nav>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -138,9 +144,7 @@ export default async function ConferencePage({
                 Featured
               </Badge>
             ) : null}
-            <Badge variant="secondary" className="rounded-full bg-card/80 backdrop-blur">
-              {difficultyLabel(conference.difficulty)}
-            </Badge>
+            <DifficultyBadge difficulty={conference.difficulty} />
           </div>
 
           <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{conference.name}</h1>
@@ -169,7 +173,11 @@ export default async function ConferencePage({
             ) : null}
           </div>
 
-          <div className="mt-6">
+          <div className="mt-6 flex flex-wrap items-center gap-4">
+            <RegisterButton
+              conferenceId={conference.id}
+              registrationOpen={derived.registrationOpen}
+            />
             <ConferenceActions
               conferenceId={conference.id}
               website={conference.website}
@@ -211,6 +219,22 @@ export default async function ConferencePage({
             ) : null}
 
             <AgendaSection agenda={conference.agenda} />
+            <AgendaView
+              items={conference.agenda.map((item) => ({
+                ...item,
+                startAt: item.startAt,
+                endAt: item.endAt,
+              }))}
+            />
+            <SecretariatSection
+              members={conference.secretariat.map((m) => ({
+                id: m.id,
+                name: m.name,
+                role: m.role,
+                photoUrl: m.photoUrl,
+                bio: m.bio,
+              }))}
+            />
 
             {conference.gallery.length > 0 ? (
               <section>
@@ -229,7 +253,7 @@ export default async function ConferencePage({
 
             <BrochuresSection brochures={conference.brochures} />
             <AwardsSection awards={conference.awards} />
-            <FaqSection faqs={conference.faqs} />
+            <FaqSection conferenceId={conference.id} faqs={conference.faqs} />
 
             <section id="reviews" className="scroll-mt-24">
               <h2 className="mb-6 text-xl font-bold tracking-tight">Reviews</h2>
@@ -250,7 +274,7 @@ export default async function ConferencePage({
     </div>
   );
   } catch (error) {
-    console.error("[ConferencePage]", error);
+    logger.error("Conference page error", { error: String(error) });
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
         <h2 className="text-lg font-semibold">Something went wrong</h2>

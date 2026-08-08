@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { Award, CheckCircle, Download, FileBadge, Globe, Share2, Shield, TrendingUp } from "lucide-react";
+import { Award, CheckCircle, FileBadge, Globe, Shield, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { logger } from "@/lib/logger";
 import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
 import { colorClasses } from "@/lib/colors";
+import { PassportActions } from "@/components/passport-actions";
 
 export const metadata = { title: "Passport | MUNOS" };
 
@@ -42,6 +44,12 @@ export default async function PassportPage() {
 
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+        <style>{`
+          @media print {
+            body { background: white !important; }
+            .no-print { display: none !important; }
+          }
+        `}</style>
         <div className="mx-auto max-w-4xl px-4 py-8">
           <div className="mb-8 flex items-end justify-between">
             <div>
@@ -50,13 +58,8 @@ export default async function PassportPage() {
                 Your verified MUN portfolio — awards, positions, and achievements.
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" className="gap-2">
-                <Share2 className="size-3.5" /> Share
-              </Button>
-              <Button className="gap-2">
-                <Download className="size-3.5" /> Export PDF
-              </Button>
+            <div className="flex gap-2 no-print">
+              <PassportActions />
             </div>
           </div>
 
@@ -164,7 +167,7 @@ export default async function PassportPage() {
       </div>
     );
   } catch (error) {
-    console.error("[Passport]", error);
+    logger.error("Passport page error", { error: String(error) });
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
         <h2 className="text-lg font-semibold">Something went wrong</h2>

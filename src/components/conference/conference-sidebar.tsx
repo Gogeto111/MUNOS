@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { CountdownTimer } from "@/components/conference/countdown-timer";
 import {
   conferenceDateRange,
   deriveConference,
@@ -106,6 +107,10 @@ export function ConferenceSidebar({
                 ? ` The deadline was ${formatDateTime(conference.registrationDeadline)}.`
                 : ""}
             </div>
+          )}
+
+          {derived.status !== "past" && (
+            <CountdownTimer startDate={conference.startDate} />
           )}
 
           <Separator />

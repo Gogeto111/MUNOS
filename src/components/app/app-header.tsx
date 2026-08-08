@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Search } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/shared/logo";
@@ -17,6 +17,7 @@ import {
 import { UserButton, useUser } from "@clerk/nextjs";
 import { isAuthConfigured } from "@/lib/public-env";
 import { NAV_ITEMS } from "@/lib/nav";
+import { GlobalSearch } from "@/components/search/global-search";
 
 export function AppHeader() {
   const pathname = usePathname();
@@ -81,7 +82,8 @@ export function AppHeader() {
         </span>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        <GlobalSearch className="hidden w-64 lg:block" />
         {isAuthConfigured ? (
           <ClerkAuthUser />
         ) : (

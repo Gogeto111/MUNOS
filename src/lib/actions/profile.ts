@@ -269,6 +269,10 @@ export interface SettingsInput {
   showAwards?: boolean;
   showCertificates?: boolean;
   showStats?: boolean;
+  showActivityStatus?: boolean;
+  showOnlineStatus?: boolean;
+  searchEngineIndexing?: boolean;
+  blockedUserIds?: string[];
 }
 
 export async function updateSettings(
@@ -303,6 +307,10 @@ export async function getSettings(): Promise<
     showAwards: boolean;
     showCertificates: boolean;
     showStats: boolean;
+    showActivityStatus: boolean;
+    showOnlineStatus: boolean;
+    searchEngineIndexing: boolean;
+    blockedUserIds: string[];
   }>
 > {
   try {
@@ -322,6 +330,10 @@ export async function getSettings(): Promise<
         showAwards: true,
         showCertificates: true,
         showStats: true,
+        showActivityStatus: true,
+        showOnlineStatus: true,
+        searchEngineIndexing: true,
+        blockedUserIds: [],
       });
     }
     return ok("Settings loaded.", {
@@ -335,6 +347,10 @@ export async function getSettings(): Promise<
       showAwards: settings.showAwards,
       showCertificates: settings.showCertificates,
       showStats: settings.showStats,
+      showActivityStatus: settings.showActivityStatus,
+      showOnlineStatus: settings.showOnlineStatus,
+      searchEngineIndexing: settings.searchEngineIndexing,
+      blockedUserIds: settings.blockedUserIds,
     });
   } catch (error) {
     return toActionError(error);
