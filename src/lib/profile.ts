@@ -19,6 +19,7 @@ export interface ProfileCompletionInput {
   countriesCount: number;
   awardsCount: number;
   certificatesCount: number;
+  socialLinksCount: number; // Included in type to fix TS errors but not scored
 }
 
 export interface ProfileCompletionResult {
@@ -29,12 +30,15 @@ export interface ProfileCompletionResult {
 }
 
 const PERSONAL_FIELDS: { key: keyof ProfileCompletionInput; label: string }[] = [
+  { key: "avatarUrl", label: "Profile picture" },
   { key: "firstName", label: "First name" },
   { key: "lastName", label: "Last name" },
   { key: "username", label: "Username" },
-  { key: "avatarUrl", label: "Profile picture" },
+  { key: "phoneNumber", label: "Phone number" },
   { key: "school", label: "School" },
-  { key: "university", label: "University" },
+  { key: "grade", label: "Grade" },
+  { key: "city", label: "City" },
+  { key: "state", label: "State" },
   { key: "country", label: "Country" },
   { key: "bio", label: "Biography" },
 ];
@@ -42,6 +46,8 @@ const PERSONAL_FIELDS: { key: keyof ProfileCompletionInput; label: string }[] = 
 const MUN_FIELDS: { key: keyof ProfileCompletionInput; label: string }[] = [
   { key: "experienceLevel", label: "Experience level" },
   { key: "munsAttended", label: "MUNs attended" },
+  { key: "awardsWon", label: "Awards won" },
+  { key: "interestsCount", label: "Interests" },
   { key: "committeesCount", label: "Committees" },
   { key: "countriesCount", label: "Countries represented" },
 ];
@@ -49,11 +55,12 @@ const MUN_FIELDS: { key: keyof ProfileCompletionInput; label: string }[] = [
 const ACHIEVEMENT_FIELDS: { key: keyof ProfileCompletionInput; label: string }[] = [
   { key: "awardsCount", label: "Awards" },
   { key: "certificatesCount", label: "Certificates" },
+  { key: "socialLinksCount", label: "Social links" },
 ];
 
 const PERSONAL_WEIGHT = 0.5;
-const MUN_WEIGHT = 0.35;
-const ACHIEVEMENT_WEIGHT = 0.15;
+const MUN_WEIGHT = 0.3;
+const ACHIEVEMENT_WEIGHT = 0.2;
 
 function isFilled(input: ProfileCompletionInput, key: keyof ProfileCompletionInput): boolean {
   const value = input[key];

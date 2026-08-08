@@ -8,8 +8,7 @@ export const STORAGE_BUCKET = "munos";
 
 export const APP_NAME = "MUNOS";
 export const APP_TAGLINE = "The operating system for Model United Nations.";
-export const APP_DESCRIPTION =
-  "MUNOS is the world's first AI-powered operating system for Model United Nations — research, conferences, committees, and a professional delegate portfolio in one place.";
+  export const APP_DESCRIPTION = "MUNOS is the world's first AI-powered operating system for Model United Nations - research, conferences, committees, and a professional delegate portfolio in one place.";
 
 export const EXPERIENCE_LEVELS: { value: ExperienceLevel; label: string }[] = [
   { value: "FIRST_TIMER", label: "First timer" },
@@ -232,3 +231,5 @@ export const PROFILE_ROLES = {
   MODERATOR: "MODERATOR",
   ADMIN: "ADMIN",
 } as const;
+
+
