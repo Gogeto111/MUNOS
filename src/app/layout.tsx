@@ -7,6 +7,7 @@ import { ClerkThemedProvider } from "@/providers/clerk-provider";
 import { Toaster } from "@/components/shared/toaster";
 import { CommandPalette } from "@/components/shared/command-palette";
 import { KeyboardShortcuts } from "@/components/shared/keyboard-shortcuts";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -109,6 +110,7 @@ export default function RootLayout({
             </>
           )}
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
