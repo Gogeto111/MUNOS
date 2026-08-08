@@ -13,10 +13,6 @@ import {
   AlertCircle,
 } from "lucide-react";
 import {
-  generateResearchBrief,
-  type ResearchBrief,
-} from "@/lib/actions/research";
-import {
   Card,
   CardContent,
   CardDescription,
@@ -27,32 +23,73 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  generateResearchBrief,
+  type ResearchBrief,
+} from "@/lib/actions/research";
+import {
+  generatePositionPaper,
+  type PositionPaper,
+} from "@/lib/actions/research/position-paper";
+import {
+  generateTopicBriefing,
+  type TopicBriefing,
+} from "@/lib/actions/research/topic-briefing";
 
 export default function ResearchPage() {
   const [topic, setTopic] = useState("");
   const [country, setCountry] = useState("");
   const [committee, setCommittee] = useState("");
-  const [brief, setBrief] = useState<ResearchBrief | null>(null);
+  const [researchBrief, setResearchBrief] = useState<ResearchBrief | null>(null);
+  const [positionPaper, setPositionPaper] = useState<PositionPaper | null>(null);
+  const [topicBriefing, setTopicBriefing] = useState<TopicBriefing | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [activeTab, setActiveTab] = useState("research");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!topic.trim() || !country.trim() || !committee.trim()) return;
 
     setError(null);
-    setBrief(null);
+    setResearchBrief(null);
+    setPositionPaper(null);
+    setTopicBriefing(null);
     startTransition(async () => {
-      const result = await generateResearchBrief(
-        topic.trim(),
-        country.trim(),
-        committee.trim(),
-      );
-      if (result.status === "success") {
-        setBrief(result.data);
-      } else {
-        setError(result.message);
+      // Depending on the active tab, generate the corresponding document
+      if (activeTab === "research") {
+        const result = await generateResearchBrief(
+          topic.trim(),
+          country.trim(),
+          committee.trim(),
+        );
+        if (result.status === "success") {
+          setResearchBrief(result.data);
+        } else {
+          setError(result.message);
+        }
+      } else if (activeTab === "position") {
+        const result = await generatePositionPaper(
+          committee.trim(),
+          country.trim(),
+          topic.trim(),
+        );
+        if (result.status === "success") {
+          setPositionPaper(result.data);
+        } else {
+          setError(result.message);
+        }
+      } else if (activeTab === "topic") {
+        const result = await generateTopicBriefing(
+          topic.trim(),
+          committee.trim(),
+        );
+        if (result.status === "success") {
+          setTopicBriefing(result.data);
+        } else {
+          setError(result.message);
+        }
       }
     });
   }
@@ -63,8 +100,24 @@ export default function ResearchPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Research Assistant</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Enter a topic, your assigned country, and committee to generate an
-          AI-powered research brief with arguments, resolutions, and talking points.
+          AI-powered research brief, position paper, or topic briefing.
         </p>
+      </div>
+
+      <div className="border rounded-xl p-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="research" className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-muted">
+              Research Brief
+            </TabsTrigger>
+            <TabsTrigger value="position" className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-muted">
+              Position Paper
+            </TabsTrigger>
+            <TabsTrigger value="topic" className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-muted">
+              Topic Briefing
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -109,7 +162,7 @@ export default function ResearchPage() {
           ) : (
             <Sparkles className="size-4" />
           )}
-          {isPending ? "Generating..." : "Generate research brief"}
+          {isPending ? "Generating..." : "Generate"}
         </Button>
       </form>
 
@@ -170,7 +223,7 @@ export default function ResearchPage() {
         </div>
       )}
 
-      {brief && (
+      {activeTab === "research" && researchBrief && (
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -181,7 +234,7 @@ export default function ResearchPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
-                {brief.overview}
+                {researchBrief.overview}
               </p>
             </CardContent>
           </Card>
@@ -195,7 +248,7 @@ export default function ResearchPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {brief.keyArgumentsFor.map((arg, i) => (
+                {researchBrief.keyArgumentsFor.map((arg, i) => (
                   <div key={i} className="space-y-1">
                     <p className="text-sm font-medium">{arg.point}</p>
                     <p className="text-xs text-muted-foreground">{arg.explanation}</p>
@@ -211,7 +264,7 @@ export default function ResearchPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {brief.keyArgumentsAgainst.map((arg, i) => (
+                {researchBrief.keyArgumentsAgainst.map((arg, i) => (
                   <div key={i} className="space-y-1">
                     <p className="text-sm font-medium">{arg.point}</p>
                     <p className="text-xs text-muted-foreground">{arg.explanation}</p>
@@ -230,7 +283,7 @@ export default function ResearchPage() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
-                {brief.talkingPoints.map((point, i) => (
+                {researchBrief.talkingPoints.map((point, i) => (
                   <li key={i} className="flex gap-2 text-sm">
                     <Badge variant="outline" className="mt-0.5 shrink-0">
                       {i + 1}
@@ -242,7 +295,7 @@ export default function ResearchPage() {
             </CardContent>
           </Card>
 
-          {brief.relevantResolutions.length > 0 && (
+          {researchBrief.relevantResolutions.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -251,7 +304,7 @@ export default function ResearchPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {brief.relevantResolutions.map((res, i) => (
+                {researchBrief.relevantResolutions.map((res, i) => (
                   <div key={i} className="space-y-1">
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary" className="font-mono text-xs">
@@ -266,7 +319,7 @@ export default function ResearchPage() {
             </Card>
           )}
 
-          {brief.bibliography.length > 0 && (
+          {researchBrief.bibliography.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -275,7 +328,7 @@ export default function ResearchPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {brief.bibliography.map((ref, i) => (
+                {researchBrief.bibliography.map((ref, i) => (
                   <div key={i} className="text-xs text-muted-foreground">
                     <span className="font-medium text-foreground">{ref.title}</span>
                     {" — "}
@@ -288,7 +341,116 @@ export default function ResearchPage() {
         </div>
       )}
 
-      {!brief && !isPending && !error && (
+      {activeTab === "position" && positionPaper && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="size-4" />
+                Position Paper
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="font-bold">{positionPaper.heading}</p>
+                <p className="text-sm">
+                  <strong>Committee:</strong> {positionPaper.committee}
+                </p>
+                <p className="text-sm">
+                  <strong>Country:</strong> {positionPaper.country}
+                </p>
+                <p className="text-sm">
+                  <strong>Topic:</strong> {positionPaper.topic}
+                </p>
+              </div>
+              <div className="space-y-4">
+                <p className="font-bold">Abstract</p>
+                <p className="text-sm">{positionPaper.abstract}</p>
+              </div>
+              <div className="space-y-4">
+                <p className="font-bold">Background</p>
+                <p className="text-sm">{positionPaper.background}</p>
+              </div>
+              <div className="space-y-4">
+                <p className="font-bold">Past International Action</p>
+                <p className="text-sm">{positionPaper.pastInternationalAction}</p>
+              </div>
+              <div className="space-y-4">
+                <p className="font-bold">Country Policy</p>
+                <p className="text-sm">{positionPaper.countryPolicy}</p>
+              </div>
+              <div className="space-y-4">
+                <p className="font-bold">Proposed Solutions</p>
+                <p className="text-sm">{positionPaper.proposedSolutions}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {activeTab === "topic" && topicBriefing && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="size-4" />
+                Topic Briefing
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="font-bold">Executive Summary</p>
+                <p className="text-sm">{topicBriefing.executiveSummary}</p>
+              </div>
+              <div className="space-y-4">
+                <p className="font-bold">Historical Context</p>
+                <p className="text-sm">{topicBriefing.historicalContext}</p>
+              </div>
+              <div className="space-y-4">
+                <p className="font-bold">Current Status</p>
+                <p className="text-sm">{topicBriefing.currentStatus}</p>
+              </div>
+              <div className="space-y-4">
+                <p className="font-bold">Key Actors</p>
+                {topicBriefing.keyActors.map((actor, i) => (
+                  <div key={i} className="space-y-2">
+                    <p className="font-bold">{actor.actor}</p>
+                    <p className="text-sm">{actor.role}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-4">
+                <p className="font-bold">Past Resolutions</p>
+                {topicBriefing.pastResolutions.map((res, i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="font-mono text-xs">
+                        {res.symbol}
+                      </Badge>
+                      <span className="text-sm font-medium">{res.title}</span> ({res.year})
+                    </div>
+                    <p className="text-xs text-muted-foreground">{res.relevance}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-4">
+                <p className="font-bold">Discussion Questions</p>
+                <ol className="list-decimal space-y-2 pl-5">
+                  {topicBriefing.discussionQuestions.map((q, i) => (
+                    <li key={i} className="text-sm">{q}</li>
+                  ))}
+                </ol>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {!(
+        (activeTab === "research" && researchBrief) ||
+        (activeTab === "position" && positionPaper) ||
+        (activeTab === "topic" && topicBriefing)
+      ) && !isPending && !error && (
         <Card className="flex min-h-64 flex-col items-center justify-center border-dashed text-center">
           <CardHeader className="items-center">
             <div className="mb-3 grid size-12 place-items-center rounded-2xl border border-brand-500/25 bg-brand-500/10 text-brand-600 dark:text-brand-400">
@@ -297,7 +459,7 @@ export default function ResearchPage() {
             <CardTitle className="text-lg">Enter a topic to begin</CardTitle>
             <CardDescription className="mx-auto max-w-sm">
               Fill in the topic, country, and committee above, then click
-              &ldquo;Generate research brief&rdquo; to get started.
+              &ldquo;Generate&rdquo; to get started.
             </CardDescription>
           </CardHeader>
         </Card>
