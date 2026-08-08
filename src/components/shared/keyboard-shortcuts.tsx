@@ -25,7 +25,9 @@ const shortcuts = [
 export function KeyboardShortcuts() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
-  const { isSignedIn } = useAuth();
+  
+  // Use useAuth only if we're within a ClerkProvider, otherwise default to signed out
+  const { isSignedIn = false } = useAuth();
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {

@@ -94,13 +94,20 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {isAuthConfigured ? (
-            <ClerkThemedProvider>{children}</ClerkThemedProvider>
+            <ClerkThemedProvider>
+              {children}
+              <Toaster />
+              <CommandPalette />
+              <KeyboardShortcuts />
+            </ClerkThemedProvider>
           ) : (
-            children
+            <>
+              {children}
+              <Toaster />
+              <CommandPalette />
+              <KeyboardShortcuts />
+            </>
           )}
-          <Toaster />
-          <CommandPalette />
-          <KeyboardShortcuts />
         </ThemeProvider>
       </body>
     </html>
