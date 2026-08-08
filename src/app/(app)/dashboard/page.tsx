@@ -80,6 +80,7 @@ export default async function DashboardPage() {
       countriesCount: counts?._count.countries ?? 0,
       awardsCount: counts?._count.awards ?? 0,
       certificatesCount: counts?._count.certificates ?? 0,
+      socialLinksCount: counts?._count.socialLinks ?? 0,
     };
 
     const completion = getProfileCompletion(input);
