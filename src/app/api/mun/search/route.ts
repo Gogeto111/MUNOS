@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { performWebSearch } from "@/lib/actions/web-search";
+import { getDb } from "@/lib/prisma";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -9,34 +9,44 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Query parameter 'q' is required" }, { status: 400 });
   }
 
-  const searches = [
-    `${query} MUN conference 2025 2026 registration`,
-    `${query} Model United Nations conference details venue fees`,
-    `site:munplanet.com OR site:bestdelegate.com ${query}`,
-  ];
+  // Search the database for matching conferences
+  const conferences = await getDb().conference.findMany({
+    where: {
+      published: true,
+      OR: [
+        { name: { contains: query, mode: "insensitive" } },
+        { tagline: { contains: query, mode: "insensitive" } },
+        { description: { contains: query, mode: "insensitive" } },
+        { city: { contains: query, mode: "insensitive" } },
+        { country: { contains: query, mode: "insensitive" } },
+        { theme: { contains: query, mode: "insensitive" } },
+      ],
+    },
+    include: {
+      committees: { select: { name: true } },
+      venue: { select: { name: true, city: true, country: true } },
+    },
+    take: 20,
+    orderBy: { startDate: "asc" },
+  });
 
-  const results: Array<{
-    title: string;
-    url: string;
-    snippet: string;
-    source: string;
-  }> = [];
+  const results = conferences.map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    tagline: c.tagline,
+    city: c.city,
+    country: c.country,
+    startDate: c.startDate,
+    endDate: c.endDate,
+    fee: c.fee,
+    currency: c.currency,
+    format: c.format,
+    difficulty: c.difficulty,
+    venue: c.venue?.name ?? null,
+    committees: c.committees.map((comm) => comm.name),
+    source: "database",
+  }));
 
-  for (const search of searches) {
-    const result = await performWebSearch(search, 5);
-    if (result.status === "success") {
-      for (const r of result.data) {
-        if (!results.find((existing) => existing.url === r.link)) {
-          results.push({
-            title: r.title,
-            url: r.link,
-            snippet: r.snippet,
-            source: "web",
-          });
-        }
-      }
-    }
-  }
-
-  return NextResponse.json({ results });
+  return NextResponse.json({ results, total: results.length });
 }
