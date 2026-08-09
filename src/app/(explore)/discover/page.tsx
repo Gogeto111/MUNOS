@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { CalendarSearch, Compass, X } from "lucide-react";
+import { CalendarSearch, Compass, X, Camera } from "lucide-react";
 import { getDb } from "@/lib/prisma";
 import { ConferenceCard } from "@/components/conference/conference-card";
 import { DiscoverToolbar } from "@/components/explore/discover-toolbar";
 import { SearchAutocomplete } from "@/components/explore/search-autocomplete";
+import { InstagramDiscovery } from "@/components/explore/instagram-discovery";
 import { Container } from "@/components/shared/container";
 import {
   parseDiscoverFilters,
@@ -241,6 +242,11 @@ export default async function DiscoverPage({
             </Link>
           </div>
         )}
+      </Container>
+
+      {/* Instagram MUN Discovery */}
+      <Container className="mt-16">
+        <InstagramDiscovery />
       </Container>
     </div>
   );

@@ -20,6 +20,10 @@ const serverSchema = z.object({
   // Voice: STT (OpenAI Whisper) + TTS (ElevenLabs)
   ELEVENLABS_API_KEY: z.string().optional().default(""),
 
+  // Instagram Graph API for MUN Discovery
+  IG_ACCESS_TOKEN: z.string().optional().default(""),
+  IG_BUSINESS_ID: z.string().optional().default(""),
+
   // Web search
   GOOGLE_SEARCH_API_KEY: z.string().optional().default(""),
   GOOGLE_SEARCH_CX: z.string().optional().default(""),
@@ -43,6 +47,8 @@ const devSchema = z.object({
   GROQ_API_KEY: z.string().optional().default(""),
   DEEPSEEK_API_KEY: z.string().optional().default(""),
   ELEVENLABS_API_KEY: z.string().optional().default(""),
+  IG_ACCESS_TOKEN: z.string().optional().default(""),
+  IG_BUSINESS_ID: z.string().optional().default(""),
   GOOGLE_SEARCH_API_KEY: z.string().optional().default(""),
   GOOGLE_SEARCH_CX: z.string().optional().default(""),
   AI_MODEL: z.string().optional().default("gemini-2.5-flash"),
