@@ -8,6 +8,7 @@ import {
   Star,
   Users,
   Wallet,
+  Clock,
 } from "lucide-react";
 import { getDb } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
@@ -32,7 +33,7 @@ export default async function AdminDashboard() {
   const db = getDb();
   const now = new Date();
 
-  const [total, published, regOpen, upcoming, organizers, bookmarks, reviews] =
+  const [total, published, regOpen, upcoming, organizers, bookmarks, reviews, pendingCount] =
     await Promise.all([
       db.conference.count(),
       db.conference.count({ where: { published: true } }),
@@ -41,12 +42,19 @@ export default async function AdminDashboard() {
       db.organizer.count(),
       db.bookmark.count(),
       db.review.count(),
+      db.pendingConference.count({ where: { status: "pending" } }),
     ]);
 
   const recent = await db.conference.findMany({
     orderBy: { createdAt: "desc" },
     take: 8,
     include: { venue: true, organizer: true },
+  });
+
+  const pendingSubmissions = await db.pendingConference.findMany({
+    where: { status: "pending" },
+    orderBy: { createdAt: "desc" },
+    take: 10,
   });
 
   const stats = [
@@ -57,6 +65,7 @@ export default async function AdminDashboard() {
     { label: "Organizers", value: organizers, icon: Users },
     { label: "Bookmarks", value: bookmarks, icon: Star },
     { label: "Reviews", value: reviews, icon: Star },
+    { label: "Pending submissions", value: pendingCount, icon: Clock },
   ];
 
   return (
@@ -159,6 +168,51 @@ export default async function AdminDashboard() {
           </table>
         </div>
       </div>
+
+      {pendingSubmissions.length > 0 && (
+        <div>
+          <h2 className="mb-3 text-lg font-semibold flex items-center gap-2">
+            <Clock className="size-5 text-amber-500" />
+            Pending Submissions
+            <Badge variant="secondary" className="text-xs">{pendingSubmissions.length}</Badge>
+          </h2>
+          <div className="overflow-hidden rounded-2xl border border-amber-500/30 bg-card shadow-sm">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                  <th className="px-4 py-3 font-medium">Conference</th>
+                  <th className="hidden px-4 py-3 font-medium md:table-cell">Organizer</th>
+                  <th className="hidden px-4 py-3 font-medium sm:table-cell">Location</th>
+                  <th className="px-4 py-3 font-medium">Submitted</th>
+                  <th className="px-4 py-3 font-medium">Email</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingSubmissions.map((sub) => (
+                  <tr key={sub.id} className="border-b border-border/40 last:border-0">
+                    <td className="px-4 py-3">
+                      <div className="font-semibold">{sub.name}</div>
+                      {sub.website && (
+                        <a href={sub.website} target="_blank" rel="noopener noreferrer" className="text-xs text-brand-500 hover:underline">
+                          {sub.website}
+                        </a>
+                      )}
+                    </td>
+                    <td className="hidden px-4 py-3 text-muted-foreground md:table-cell">{sub.organizer}</td>
+                    <td className="hidden px-4 py-3 text-muted-foreground sm:table-cell">
+                      {[sub.city, sub.country].filter(Boolean).join(", ")}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {sub.createdAt.toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">{sub.email || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
