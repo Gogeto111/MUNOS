@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, FileText, ArrowRight, Copy, Check, Download } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Loader2, FileText, ArrowRight, Copy, Check, Download, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +67,39 @@ export function ResearchAgent() {
   const [dossier, setDossier] = useState<ResearchDossier | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const searchableText = useMemo(() => {
+    if (!dossier) return "";
+    const parts: string[] = [];
+    const add = (v: unknown) => { if (typeof v === "string") parts.push(v); else if (Array.isArray(v)) v.forEach(add); else if (v && typeof v === "object") Object.values(v).forEach(add); };
+    add(dossier);
+    return parts.join(" ").toLowerCase();
+  }, [dossier]);
+
+  const sectionMatches = useMemo(() => {
+    if (!search.trim() || !dossier) return null;
+    const q = search.toLowerCase();
+    const match = (text: string) => text.toLowerCase().includes(q);
+    const m: Record<string, boolean> = {};
+    m.executive = match(dossier.executiveBrief.whatIsHappening) || match(dossier.executiveBrief.whyItMatters);
+    m.agenda = match(dossier.agendaDeepDive.historicalBackground) || match(dossier.agendaDeepDive.currentSituation);
+    m.country = match(dossier.countryPosition.officialPosition);
+    m.interests = dossier.countryInterests.whatDoesCountryWant.some(match);
+    m.landscape = dossier.internationalLandscape.allies.some((a) => match(a.why));
+    m.un = dossier.unFramework.charterProvisions.some(match);
+    m.current = dossier.currentAffairs.some((c) => match(c.whatHappened));
+    m.evidence = dossier.evidence.some((e) => match(e.content));
+    m.attack = dossier.diplomaticAmmunition.contradictions.some(match);
+    m.poi = dossier.poiBank.some((p) => match(p.text));
+    m.defense = dossier.defenseBank.some((d) => match(d.bestResponse));
+    m.policy = dossier.policyOptions.some((p) => match(p.proposal));
+    m.resolution = dossier.resolutionMaterial.operativeClauses.some(match);
+    m.gsl = match(dossier.gslMaterial.strongestOpeningHook);
+    m.takeaways = dossier.takeaways.some(match);
+    m.sources = dossier.sources.some((s) => match(s.title));
+    return m;
+  }, [search, dossier]);
 
   const handleGenerate = async () => {
     if (!country || !committee || !agenda) return;
@@ -283,12 +316,36 @@ export function ResearchAgent() {
           </div>
 
           <Tabs defaultValue="executive" className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1 max-w-xs">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search dossier..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="h-8 pl-8 text-xs"
+                />
+                {search && (
+                  <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    <X className="size-3" />
+                  </button>
+                )}
+              </div>
+              {search && sectionMatches && (
+                <span className="text-[10px] text-muted-foreground">
+                  {Object.values(sectionMatches).filter(Boolean).length}/{SECTIONS.length} sections match
+                </span>
+              )}
+            </div>
             <TabsList className="flex-wrap h-auto gap-1">
-              {SECTIONS.map((s) => (
-                <TabsTrigger key={s.id} value={s.id} className="text-xs">
-                  {s.icon} {s.label}
-                </TabsTrigger>
-              ))}
+              {SECTIONS.map((s) => {
+                const hidden = sectionMatches && !sectionMatches[s.id];
+                return (
+                  <TabsTrigger key={s.id} value={s.id} className={`text-xs ${hidden ? "opacity-30" : ""}`}>
+                    {s.icon} {s.label}
+                  </TabsTrigger>
+                );
+              })}
             </TabsList>
 
             <TabsContent value="executive">

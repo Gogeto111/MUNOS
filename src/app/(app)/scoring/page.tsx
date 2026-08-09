@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 
 const GOALS_KEY = "munos-scoring-goals";
+const SCORE_LOG_KEY = "munos-score-log";
 
 interface Goals {
   speaking: number;
@@ -22,6 +23,20 @@ interface Goals {
   documentation: number;
   collaboration: number;
   overall: number;
+}
+
+interface ScoreLog {
+  overall: number;
+  speaking: number;
+  research: number;
+  diplomacy: number;
+  leadership: number;
+  documentation: number;
+  collaboration: number;
+  country: string;
+  committee: string;
+  agenda: string;
+  ts: number;
 }
 
 const DEFAULT_GOALS: Goals = { speaking: 80, research: 80, diplomacy: 80, leadership: 75, documentation: 75, collaboration: 75, overall: 80 };
@@ -44,6 +59,19 @@ function loadGoals(): Goals {
 function saveGoals(goals: Goals) {
   if (typeof window === "undefined") return;
   try { localStorage.setItem(GOALS_KEY, JSON.stringify(goals)); } catch {}
+}
+
+function loadScoreLog(): ScoreLog[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(localStorage.getItem(SCORE_LOG_KEY) || "[]"); } catch { return []; }
+}
+
+function appendScoreLog(entry: ScoreLog) {
+  if (typeof window === "undefined") return;
+  const log = loadScoreLog();
+  log.push(entry);
+  if (log.length > 50) log.splice(0, log.length - 50);
+  localStorage.setItem(SCORE_LOG_KEY, JSON.stringify(log));
 }
 
 function ScoreRing({ label, score }: { label: string; score: number }) {
@@ -74,8 +102,9 @@ export default function ScoringPage() {
   const [history, setHistory] = useState<Record<string, unknown> | null>(null);
   const [goals, setGoals] = useState<Goals>(DEFAULT_GOALS);
   const [editGoals, setEditGoals] = useState(false);
+  const [scoreLog, setScoreLog] = useState<ScoreLog[]>([]);
 
-  useEffect(() => { loadHistory(); setGoals(loadGoals()); }, []);
+  useEffect(() => { loadHistory(); setGoals(loadGoals()); setScoreLog(loadScoreLog()); }, []);
 
   const loadHistory = async () => {
     const result = await getDelegatePerformanceHistory();
@@ -96,7 +125,21 @@ export default function ScoringPage() {
       },
     );
     if (result.status === "success") {
-      setScore(result.data as unknown as Record<string, unknown>);
+      const data = result.data as unknown as Record<string, unknown>;
+      setScore(data);
+      const entry: ScoreLog = {
+        overall: Number(data.overall) || 0,
+        speaking: Number(data.speaking) || 0,
+        research: Number(data.research) || 0,
+        diplomacy: Number(data.diplomacy) || 0,
+        leadership: Number(data.leadership) || 0,
+        documentation: Number(data.documentation) || 0,
+        collaboration: Number(data.collaboration) || 0,
+        country, committee, agenda,
+        ts: Date.now(),
+      };
+      appendScoreLog(entry);
+      setScoreLog(loadScoreLog());
       toast.success("Scored!");
       loadHistory();
     } else {
@@ -295,6 +338,56 @@ export default function ScoringPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Score History */}
+      {scoreLog.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <TrendingUp className="size-4" /> Score History
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-1 h-32 mb-3">
+              {scoreLog.slice(-15).map((entry, i) => {
+                const h = Math.max(8, (entry.overall / 100) * 120);
+                const color = entry.overall >= 80 ? "bg-green-500" : entry.overall >= 60 ? "bg-yellow-500" : "bg-red-500";
+                return (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
+                    <span className="text-[9px] font-mono text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">{entry.overall}</span>
+                    <div className={`w-full rounded-t ${color}`} style={{ height: `${h}px` }} />
+                    <span className="text-[8px] text-muted-foreground">{new Date(entry.ts).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                  </div>
+                );
+              })}
+            </div>
+            {scoreLog.length >= 2 && (
+              <p className="text-[10px] text-muted-foreground">
+                {scoreLog[scoreLog.length - 1].overall > scoreLog[0].overall
+                  ? `↑ Improved ${scoreLog[scoreLog.length - 1].overall - scoreLog[0].overall} points since first score`
+                  : scoreLog[scoreLog.length - 1].overall === scoreLog[0].overall
+                    ? "→ Consistent performance"
+                    : `↓ Down ${scoreLog[0].overall - scoreLog[scoreLog.length - 1].overall} points`}
+                {" "} · {scoreLog.length} total scores
+              </p>
+            )}
+            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-lg bg-muted/30 p-2">
+                <p className="text-lg font-bold">{Math.round(scoreLog.reduce((a, s) => a + s.overall, 0) / scoreLog.length)}</p>
+                <p className="text-[10px] text-muted-foreground">Avg Overall</p>
+              </div>
+              <div className="rounded-lg bg-muted/30 p-2">
+                <p className="text-lg font-bold">{Math.max(...scoreLog.map((s) => s.overall))}</p>
+                <p className="text-[10px] text-muted-foreground">Best Score</p>
+              </div>
+              <div className="rounded-lg bg-muted/30 p-2">
+                <p className="text-lg font-bold">{scoreLog.length}</p>
+                <p className="text-[10px] text-muted-foreground">Sessions</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
