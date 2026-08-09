@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Trophy, TrendingUp } from "lucide-react";
+import { Loader2, Trophy, TrendingUp, Target, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,40 @@ import {
   getDelegatePerformanceHistory,
 } from "@/lib/actions/mun-scoring";
 import { toast } from "sonner";
+
+const GOALS_KEY = "munos-scoring-goals";
+
+interface Goals {
+  speaking: number;
+  research: number;
+  diplomacy: number;
+  leadership: number;
+  documentation: number;
+  collaboration: number;
+  overall: number;
+}
+
+const DEFAULT_GOALS: Goals = { speaking: 80, research: 80, diplomacy: 80, leadership: 75, documentation: 75, collaboration: 75, overall: 80 };
+
+const BENCHMARKS = [
+  { label: "Beginner Delegate", speaking: 40, research: 35, diplomacy: 45, leadership: 30, documentation: 40, collaboration: 50, overall: 40 },
+  { label: "Intermediate Delegate", speaking: 65, research: 60, diplomacy: 70, leadership: 55, documentation: 65, collaboration: 70, overall: 63 },
+  { label: "Advanced Delegate", speaking: 80, research: 78, diplomacy: 85, leadership: 75, documentation: 80, collaboration: 85, overall: 80 },
+  { label: "Best Delegate Winner", speaking: 92, research: 90, diplomacy: 95, leadership: 90, documentation: 88, collaboration: 92, overall: 91 },
+];
+
+function loadGoals(): Goals {
+  if (typeof window === "undefined") return DEFAULT_GOALS;
+  try {
+    const raw = localStorage.getItem(GOALS_KEY);
+    return raw ? JSON.parse(raw) : DEFAULT_GOALS;
+  } catch { return DEFAULT_GOALS; }
+}
+
+function saveGoals(goals: Goals) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(GOALS_KEY, JSON.stringify(goals)); } catch {}
+}
 
 function ScoreRing({ label, score }: { label: string; score: number }) {
   const pct = Math.round(score);
@@ -38,8 +72,10 @@ export default function ScoringPage() {
   const [loading, setLoading] = useState(false);
   const [score, setScore] = useState<Record<string, unknown> | null>(null);
   const [history, setHistory] = useState<Record<string, unknown> | null>(null);
+  const [goals, setGoals] = useState<Goals>(DEFAULT_GOALS);
+  const [editGoals, setEditGoals] = useState(false);
 
-  useEffect(() => { loadHistory(); }, []);
+  useEffect(() => { loadHistory(); setGoals(loadGoals()); }, []);
 
   const loadHistory = async () => {
     const result = await getDelegatePerformanceHistory();
@@ -165,6 +201,100 @@ export default function ScoringPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Goals */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Target className="size-4 text-brand-500" /> My Goals
+          </CardTitle>
+          <Button size="sm" variant="ghost" onClick={() => { setEditGoals(!editGoals); if (editGoals) { saveGoals(goals); toast.success("Goals saved"); } }}>
+            {editGoals ? "Save" : "Edit"}
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {score ? (
+            <div className="space-y-3">
+              {(["speaking", "research", "diplomacy", "leadership", "documentation", "collaboration", "overall"] as const).map((dim) => {
+                const current = dim === "overall" ? Number(score.overall) || 0 : Number(score[dim]) || 0;
+                const goal = goals[dim];
+                const pct = Math.min(100, Math.round((current / goal) * 100));
+                const met = current >= goal;
+                return (
+                  <div key={dim} className="flex items-center gap-3">
+                    <span className="w-28 text-xs capitalize text-muted-foreground">{dim}</span>
+                    <div className="flex-1 h-2 rounded-full bg-muted/30 overflow-hidden">
+                      <div className={`h-full rounded-full transition-all ${met ? "bg-green-500" : "bg-brand-500"}`} style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className={`text-xs font-mono ${met ? "text-green-500" : "text-muted-foreground"}`}>{current}/{goal}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Score a performance to see goal progress.</p>
+          )}
+          {editGoals && (
+            <div className="mt-4 grid gap-2 sm:grid-cols-4">
+              {(["speaking", "research", "diplomacy", "leadership", "documentation", "collaboration", "overall"] as const).map((dim) => (
+                <div key={dim} className="flex items-center gap-2">
+                  <span className="text-xs capitalize text-muted-foreground w-24">{dim}</span>
+                  <Input type="number" min={0} max={100} value={goals[dim]} onChange={(e) => setGoals({ ...goals, [dim]: Number(e.target.value) })} className="h-8" />
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Benchmarks */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Star className="size-4 text-yellow-500" /> Delegate Benchmarks
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border/60">
+                  <th className="pb-2 text-left font-medium text-muted-foreground">Level</th>
+                  {["Speaking", "Research", "Diplomacy", "Leadership", "Docs", "Collab", "Overall"].map((h) => (
+                    <th key={h} className="pb-2 text-center font-medium text-muted-foreground">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {BENCHMARKS.map((b) => (
+                  <tr key={b.label} className="border-b border-border/30">
+                    <td className="py-2 font-medium">{b.label}</td>
+                    <td className="py-2 text-center">{b.speaking}</td>
+                    <td className="py-2 text-center">{b.research}</td>
+                    <td className="py-2 text-center">{b.diplomacy}</td>
+                    <td className="py-2 text-center">{b.leadership}</td>
+                    <td className="py-2 text-center">{b.documentation}</td>
+                    <td className="py-2 text-center">{b.collaboration}</td>
+                    <td className="py-2 text-center font-semibold">{b.overall}</td>
+                  </tr>
+                ))}
+                {score && (
+                  <tr className="bg-brand-500/10">
+                    <td className="py-2 font-semibold text-brand-600">You</td>
+                    <td className="py-2 text-center font-mono">{Number(score.speaking) || 0}</td>
+                    <td className="py-2 text-center font-mono">{Number(score.research) || 0}</td>
+                    <td className="py-2 text-center font-mono">{Number(score.diplomacy) || 0}</td>
+                    <td className="py-2 text-center font-mono">{Number(score.leadership) || 0}</td>
+                    <td className="py-2 text-center font-mono">{Number(score.documentation) || 0}</td>
+                    <td className="py-2 text-center font-mono">{Number(score.collaboration) || 0}</td>
+                    <td className="py-2 text-center font-mono font-semibold">{Number(score.overall) || 0}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
