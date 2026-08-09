@@ -36,6 +36,11 @@ async function searchHashtag(
   return data.data?.[0]?.id ?? null;
 }
 
+interface InstagramMedia {
+  username: string;
+  caption?: string;
+}
+
 async function getRecentMedia(
   hashtagId: string,
   userId: string,
@@ -45,7 +50,7 @@ async function getRecentMedia(
   const res = await fetch(url);
   if (!res.ok) return [];
   const data = await res.json();
-  return (data.data ?? []).map((m: any) => ({
+  return (data.data ?? []).map((m: InstagramMedia) => ({
     username: m.username,
     caption: m.caption ?? "",
   }));
