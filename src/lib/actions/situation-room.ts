@@ -1,8 +1,8 @@
 "use server";
 
 import { generateText } from "ai";
-import { google } from "@ai-sdk/google";
-import { env, isAiConfigured } from "@/lib/env";
+import { getBestModel } from "@/lib/ai-model";
+import { isAiConfigured } from "@/lib/env";
 
 export async function generateSituationAnalysis(
   country: string,
@@ -16,7 +16,7 @@ export async function generateSituationAnalysis(
 
   try {
     const result = await generateText({
-      model: google(env.AI_MODEL || "gemini-2.5-flash"),
+      model: getBestModel(),
       system: `You are a MUN Situation Room analyst. Generate a situation analysis for a delegate in a committee session.
 
 COUNTRY: ${country}

@@ -7,15 +7,14 @@ const serverSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional().default(""),
   SUPABASE_URL: z.string().optional().default(""),
 
-  // Primary AI: Gemini
+  // AI Providers (Groq + NVIDIA are free, no credit card)
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional().default(""),
-
-  // Fallback AI providers
   OPENAI_API_KEY: z.string().optional().default(""),
   ANTHROPIC_API_KEY: z.string().optional().default(""),
   OPENROUTER_API_KEY: z.string().optional().default(""),
   GROQ_API_KEY: z.string().optional().default(""),
   DEEPSEEK_API_KEY: z.string().optional().default(""),
+  NVIDIA_API_KEY: z.string().optional().default(""),
 
   // Voice: STT (OpenAI Whisper) + TTS (ElevenLabs)
   ELEVENLABS_API_KEY: z.string().optional().default(""),
@@ -46,6 +45,7 @@ const devSchema = z.object({
   OPENROUTER_API_KEY: z.string().optional().default(""),
   GROQ_API_KEY: z.string().optional().default(""),
   DEEPSEEK_API_KEY: z.string().optional().default(""),
+  NVIDIA_API_KEY: z.string().optional().default(""),
   ELEVENLABS_API_KEY: z.string().optional().default(""),
   IG_ACCESS_TOKEN: z.string().optional().default(""),
   IG_BUSINESS_ID: z.string().optional().default(""),
@@ -92,6 +92,8 @@ export const isOpenRouterConfigured = Boolean(env.OPENROUTER_API_KEY);
 export const isGroqConfigured = Boolean(env.GROQ_API_KEY);
 
 export const isDeepSeekConfigured = Boolean(env.DEEPSEEK_API_KEY);
+
+export const isNvidiaConfigured = Boolean(env.NVIDIA_API_KEY);
 
 export const isVoiceConfigured = Boolean(
   env.OPENAI_API_KEY && env.ELEVENLABS_API_KEY,

@@ -1,7 +1,7 @@
 "use server";
 
 import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
+import { getBestModel } from "@/lib/ai-model";
 import { z } from "zod";
 import { isAiConfigured, isWebSearchConfigured } from "@/lib/env";
 import { performWebSearch, type GoogleSearchResult } from "@/lib/actions/web-search";
@@ -72,7 +72,7 @@ Please incorporate information from these recent sources into your analysis wher
     }
 
     const result = await generateObject({
-      model: google("gemini-2.5-flash"),
+      model: getBestModel(),
       schema: ResearchBriefSchema,
       prompt: `You are an expert MUN research assistant. Generate a research brief for ${country} in the ${committee} committee on ${topic}. Include overview, arguments for/against, relevant resolutions, talking points, and bibliography.${searchResults}`
     });

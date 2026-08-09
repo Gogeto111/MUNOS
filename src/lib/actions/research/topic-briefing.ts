@@ -1,9 +1,9 @@
 "use server";
 
 import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
+import { getBestModel } from "@/lib/ai-model";
 import { z } from "zod";
-import { ok, toActionError, type ActionState } from "@/lib/actions";
+import { ok } from "@/lib/actions";
 import { isAiConfigured, isWebSearchConfigured } from "@/lib/env";
 import { performWebSearch } from "@/lib/actions/web-search";
 
@@ -74,7 +74,7 @@ Please incorporate information from these recent sources into your analysis wher
     }
 
     const result = await generateObject({
-      model: google("gemini-2.5-flash"),
+      model: getBestModel(),
       schema: TopicBriefingSchema,
       prompt: `You are an expert MUN (Model United Nations) research assistant. Generate a topic briefing for the ${committee} committee on the topic: ${topic}.
 

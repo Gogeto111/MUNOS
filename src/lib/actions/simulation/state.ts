@@ -137,9 +137,9 @@ Respond in character as the delegate for ${target.country}. Keep your response c
 
   try {
     const { generateText } = await import("ai");
-    const { google } = await import("@ai-sdk/google");
+    const { getBestModel } = await import("@/lib/ai-model");
     const result = await generateText({
-      model: google(process.env.AI_MODEL ?? "gemini-2.5-flash"),
+      model: getBestModel(),
       prompt,
       temperature: 0.7,
     });

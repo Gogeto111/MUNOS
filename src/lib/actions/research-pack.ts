@@ -1,7 +1,7 @@
 "use server";
 
 import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
+import { getBestModel } from "@/lib/ai-model";
 import { z } from "zod";
 import { ok, toActionError, type ActionState } from "@/lib/actions";
 import { isAiConfigured } from "@/lib/env";
@@ -50,7 +50,7 @@ export async function generateResearchPack(
 
   try {
     const result = await generateObject({
-      model: google("gemini-2.5-flash"),
+      model: getBestModel(),
       schema: ResearchPackSchema,
       prompt: `You are an expert MUN research assistant. Generate a comprehensive research pack for a delegate representing ${country} in the ${committeeName} committee.
 

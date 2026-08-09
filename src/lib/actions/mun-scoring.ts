@@ -1,7 +1,7 @@
 "use server";
 
 import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
+import { getBestModel } from "@/lib/ai-model";
 import { z } from "zod";
 import { isAiConfigured } from "@/lib/env";
 import { getDb } from "@/lib/prisma";
@@ -64,7 +64,7 @@ export async function scoreDelegatePerformance(
 
   try {
     const result = await generateObject({
-      model: google("gemini-2.5-flash"),
+      model: getBestModel(),
       schema: MunScoreSchema,
       prompt: `You are an expert MUN scoring judge. Evaluate this delegate's performance.
 

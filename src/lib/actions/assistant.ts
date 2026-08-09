@@ -2,32 +2,50 @@
 
 import { generateObject, generateText, type LanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
-import { openai } from "@ai-sdk/openai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
+import { createGroq } from "@ai-sdk/groq";
 import { z } from "zod";
-import { env, isAiConfigured } from "@/lib/env";
+import { env, isAiConfigured, isGroqConfigured, isOpenAiConfigured, isAnthropicConfigured, isNvidiaConfigured } from "@/lib/env";
 import { getMemoryContextString } from "@/lib/actions/ai-memory";
 
 // ---------------------------------------------------------------------------
 // AI Provider with fallback
+// Groq (fastest, free) → NVIDIA NIM (free) → Gemini → OpenAI → Anthropic
 // ---------------------------------------------------------------------------
 
-type AIProvider = "gemini" | "openai" | "anthropic" | "groq";
+const groq = createGroq({ apiKey: env.GROQ_API_KEY });
+
+// NVIDIA NIM: OpenAI-compatible at https://integrate.api.nvidia.com/v1
+function nvidiaModel() {
+  return createOpenAI({
+    baseURL: "https://integrate.api.nvidia.com/v1",
+    apiKey: env.NVIDIA_API_KEY,
+  })("nvidia/llama-3.3-nemotron-super-49b-v1");
+}
+
+type AIProvider = "groq" | "nvidia" | "gemini" | "openai" | "anthropic";
 
 function getPrimaryModel() {
+  if (isGroqConfigured) return groq("llama-3.3-70b-versatile");
+  if (isNvidiaConfigured) return nvidiaModel();
   if (isAiConfigured) return google(env.AI_MODEL || "gemini-2.5-flash");
-  if (env.OPENAI_API_KEY) return openai("gpt-4o");
-  if (env.ANTHROPIC_API_KEY) return anthropic("claude-sonnet-4-20250514");
+  if (isOpenAiConfigured) return createOpenAI({ apiKey: env.OPENAI_API_KEY })("gpt-4o");
+  if (isAnthropicConfigured) return anthropic("claude-sonnet-4-20250514");
   return null;
 }
 
-function getFallbackModel(primary: AIProvider) {
-  const fallbacks: AIProvider[] = ["gemini", "openai", "anthropic", "groq"];
+function getFallbackModel(primary: AIProvider): LanguageModel | null {
+  const fallbacks: { key: AIProvider; model: () => LanguageModel }[] = [
+    { key: "groq", model: () => groq("llama-3.3-70b-versatile") },
+    { key: "nvidia", model: () => nvidiaModel() },
+    { key: "gemini", model: () => google(env.AI_MODEL || "gemini-2.5-flash") },
+    { key: "openai", model: () => createOpenAI({ apiKey: env.OPENAI_API_KEY })("gpt-4o") },
+    { key: "anthropic", model: () => anthropic("claude-sonnet-4-20250514") },
+  ];
   for (const fb of fallbacks) {
-    if (fb !== primary) {
-      if (fb === "gemini" && isAiConfigured) return google(env.AI_MODEL || "gemini-2.5-flash");
-      if (fb === "openai" && env.OPENAI_API_KEY) return openai("gpt-4o");
-      if (fb === "anthropic" && env.ANTHROPIC_API_KEY) return anthropic("claude-sonnet-4-20250514");
+    if (fb.key !== primary) {
+      try { return fb.model(); } catch { continue; }
     }
   }
   return null;
@@ -37,13 +55,13 @@ async function withFallback<T>(
   fn: (model: LanguageModel) => Promise<T>,
 ): Promise<T> {
   const primary = getPrimaryModel();
-  if (!primary) throw new Error("No AI provider configured. Add an API key to your .env.");
+  if (!primary) throw new Error("No AI provider configured. Add GROQ_API_KEY or NVIDIA_API_KEY to your .env (both free, no credit card).");
   try {
     return await fn(primary);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "";
     if (msg.includes("429") || msg.includes("quota") || msg.includes("rate") || msg.includes("503")) {
-      const fallback = getFallbackModel("gemini");
+      const fallback = getFallbackModel("groq");
       if (fallback) return await fn(fallback);
     }
     throw err;

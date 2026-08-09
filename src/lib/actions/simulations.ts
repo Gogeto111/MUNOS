@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
 import { ok, fail, type ActionState } from "@/lib/actions";
 import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
+import { getBestModel } from "@/lib/ai-model";
 
 const SimulationInputSchema = z.object({
   conferenceId: z.string().min(1),
@@ -124,7 +124,7 @@ async function generateAIResponse(
 
   try {
     const { object } = await generateObject({
-      model: google(process.env.AI_MODEL ?? "gemini-2.5-flash"),
+      model: getBestModel(),
       schema: responseSchema,
       prompt,
     });
