@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, FileText, ArrowRight, Copy, Check } from "lucide-react";
+import { Loader2, FileText, ArrowRight, Copy, Check, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -100,6 +100,121 @@ export function ResearchAgent() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const exportMarkdown = () => {
+    if (!dossier) return;
+    const lines: string[] = [];
+    const h1 = (t: string) => lines.push(`# ${t}\n`);
+    const h2 = (t: string) => lines.push(`## ${t}\n`);
+    const h3 = (t: string) => lines.push(`### ${t}\n`);
+    const p = (t: string) => lines.push(`${t}\n`);
+    const li = (t: string) => lines.push(`- ${t}`);
+    const nl = () => lines.push("");
+
+    h1(`Research Dossier — ${country} · ${committee}`);
+    p(`*Agenda: ${agenda}*\n`);
+
+    h2("Executive Brief");
+    p(`**What is happening:** ${dossier.executiveBrief.whatIsHappening}`);
+    p(`**Why it matters:** ${dossier.executiveBrief.whyItMatters}`);
+    p(`**Current situation:** ${dossier.executiveBrief.currentSituation}`);
+    p(`**Why the committee should care:** ${dossier.executiveBrief.whyCommitteeShouldCare}`);
+    nl();
+
+    h2("Agenda Deep Dive");
+    p(`**Historical background:** ${dossier.agendaDeepDive.historicalBackground}`);
+    p(`**Current situation:** ${dossier.agendaDeepDive.currentSituation}`);
+    h3("Major Causes");
+    dossier.agendaDeepDive.majorCauses.forEach(li);
+    h3("Major Consequences");
+    dossier.agendaDeepDive.majorConsequences.forEach(li);
+    h3("Important Actors");
+    dossier.agendaDeepDive.importantActors.forEach(li);
+    h3("Major Disputes");
+    dossier.agendaDeepDive.majorDisputes.forEach(li);
+    h3("Key Terminology");
+    dossier.agendaDeepDive.keyTerminology.forEach((t) => li(`**${t.term}:** ${t.definition}`));
+    nl();
+
+    h2("Country Position");
+    p(`**Official position:** ${dossier.countryPosition.officialPosition}`);
+    h3("Relevant Policies");
+    dossier.countryPosition.relevantPolicies.forEach(li);
+    h3("Voting Record");
+    dossier.countryPosition.votingRecord.forEach(li);
+    p(`**Economic interests:** ${dossier.countryPosition.economicInterests}`);
+    p(`**Security interests:** ${dossier.countryPosition.securityInterests}`);
+    p(`**Political interests:** ${dossier.countryPosition.politicalInterests}`);
+    nl();
+
+    h2("Country Interests");
+    h3("Wants");
+    dossier.countryInterests.whatDoesCountryWant.forEach(li);
+    h3("Needs to Avoid");
+    dossier.countryInterests.whatDoesCountryNeedToAvoid.forEach(li);
+    nl();
+
+    h2("International Landscape");
+    h3("Allies");
+    dossier.internationalLandscape.allies.forEach((a) => li(`**${a.country}:** ${a.why}`));
+    h3("Opposing States");
+    dossier.internationalLandscape.opposingStates.forEach((o) => li(`**${o.country}:** ${o.why}`));
+    nl();
+
+    h2("UN Framework");
+    h3("Charter Provisions");
+    dossier.unFramework.charterProvisions.forEach(li);
+    h3("Resolutions");
+    dossier.unFramework.resolutions.forEach((r) => li(`**${r.symbol} — ${r.title}:** ${r.relevance}`));
+    nl();
+
+    h2("Current Affairs");
+    dossier.currentAffairs.forEach((c) => {
+      p(`- **${c.when}:** ${c.whatHappened} — ${c.whyItMatters} *(Source: ${c.source})*`);
+    });
+    nl();
+
+    h2("Evidence & Data");
+    dossier.evidence.forEach((e) => li(`*[${e.type}]* ${e.content} *(Source: ${e.source})*`));
+    nl();
+
+    h2("Diplomatic Ammunition");
+    h3("Contradictions");
+    dossier.diplomaticAmmunition.contradictions.forEach(li);
+    h3("Voting Contradictions");
+    dossier.diplomaticAmmunition.votingContradictions.forEach(li);
+    nl();
+
+    h2("POI Bank");
+    dossier.poiBank.forEach((poi) => li(`*[${poi.type} vs ${poi.targetCountry}]* ${poi.text} — _${poi.rationale}_`));
+    nl();
+
+    h2("Defense Bank");
+    dossier.defenseBank.forEach((d) => li(`**Attack:** ${d.expectedAttack} → **Response:** ${d.bestResponse}`));
+    nl();
+
+    h2("Resolution Clauses");
+    h3("Preambulatory");
+    dossier.resolutionMaterial.preambulatoryClauses.forEach(li);
+    h3("Operative");
+    dossier.resolutionMaterial.operativeClauses.forEach(li);
+    nl();
+
+    h2("Key Takeaways");
+    dossier.takeaways.forEach(li);
+    nl();
+
+    h2("Sources");
+    dossier.sources.forEach((s) => li(`[${s.title}](${s.url}) — ${s.organization} — Tier ${s.tier}`));
+
+    const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `dossier-${country.toLowerCase().replace(/\s+/g, "-")}-${committee.toLowerCase().replace(/\s+/g, "-")}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -155,6 +270,10 @@ export function ResearchAgent() {
               <Button size="sm" variant="outline" onClick={copyAssistantContext}>
                 {copied ? <Check className="mr-1 size-3" /> : <Copy className="mr-1 size-3" />}
                 {copied ? "Copied" : "Copy Context"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={exportMarkdown}>
+                <Download className="mr-1 size-3" />
+                Export .md
               </Button>
               <Button size="sm" onClick={handlePrepareMe}>
                 Prepare Me for Debate
