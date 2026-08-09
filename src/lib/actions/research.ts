@@ -4,7 +4,7 @@ import { generateObject } from "ai";
 import { google } from "@ai-sdk/google";
 import { z } from "zod";
 import { isAiConfigured, isWebSearchConfigured } from "@/lib/env";
-import { performWebSearch, type GoogleSearchResult } from "./web-search";
+import { performWebSearch, type GoogleSearchResult } from "@/lib/actions/web-search";
 
 const ResearchBriefSchema = z.object({
   overview: z.string().describe("A concise 2-3 paragraph overview of the topic"),

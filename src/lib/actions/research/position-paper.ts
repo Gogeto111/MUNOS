@@ -5,7 +5,7 @@ import { google } from "@ai-sdk/google";
 import { z } from "zod";
 import { ok, toActionError, type ActionState } from "@/lib/actions";
 import { isAiConfigured, isWebSearchConfigured } from "@/lib/env";
-import { performWebSearch } from "../web-search";
+import { performWebSearch } from "@/lib/actions/web-search";
 
 const PositionPaperSchema = z.object({
   heading: z.string().describe("Heading: e.g., \'POSITION PAPER\'"),
