@@ -11,6 +11,7 @@ import {
   BarChart3,
   Award,
   TrendingUp,
+  GitCompareArrows,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   createVideoCoachSession,
   listVideoCoachSessions,
@@ -100,8 +102,10 @@ function ScoreBar({ value, label, max = 10 }: { value: number; label: string; ma
 export default function CoachPage() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<"list" | "new" | "detail">("list");
+  const [view, setView] = useState<"list" | "new" | "detail" | "compare">("list");
   const [selectedSession, setSelectedSession] = useState<SessionDetail | null>(null);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [compareSessions, setCompareSessions] = useState<SessionDetail[]>([]);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
   const [title, setTitle] = useState("");
@@ -166,6 +170,31 @@ export default function CoachPage() {
     setLoadingDetail(false);
   };
 
+  const toggleCompare = (id: string) => {
+    setCompareIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 2) return [prev[1], id];
+      return [...prev, id];
+    });
+  };
+
+  const startCompare = async () => {
+    if (compareIds.length !== 2) return;
+    setLoadingDetail(true);
+    const results = await Promise.all(compareIds.map((id) => getVideoCoachSession(id)));
+    const loaded: SessionDetail[] = [];
+    for (const r of results) {
+      if (r.status === "success" && r.data) loaded.push(r.data);
+    }
+    if (loaded.length === 2) {
+      setCompareSessions(loaded);
+      setView("compare");
+    } else {
+      toast.error("Could not load sessions for comparison");
+    }
+    setLoadingDetail(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <div className="mx-auto max-w-6xl px-4 py-8">
@@ -226,10 +255,22 @@ export default function CoachPage() {
               </Card>
 
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <FileVideo className="size-5" /> Recent Sessions
                   </CardTitle>
+                  {sessions.length >= 2 && (
+                    <Button
+                      size="sm"
+                      variant={compareIds.length === 2 ? "default" : "outline"}
+                      disabled={compareIds.length !== 2 || loadingDetail}
+                      onClick={startCompare}
+                      className="gap-1"
+                    >
+                      <GitCompareArrows className="size-3" />
+                      Compare ({compareIds.length}/2)
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardContent>
                   {loading ? (
@@ -247,28 +288,42 @@ export default function CoachPage() {
                   ) : (
                     <ScrollArea className="h-[40vh]">
                       <div className="space-y-2">
-                        {sessions.map((session) => (
-                          <button
-                            key={session.id}
-                            onClick={() => openSession(session.id)}
-                            className="flex w-full items-center justify-between rounded-lg border border-border/60 p-3 text-left transition-colors hover:bg-muted/40"
-                          >
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">{session.title}</p>
-                              <p className="text-[10px] text-muted-foreground">
-                                {new Date(session.createdAt).toLocaleDateString()}
-                                {session.durationSec && ` • ${Math.round(session.durationSec)}s`}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <div className="text-right">
-                                <p className="text-lg font-bold tabular-nums">{session.overall}</p>
-                                <p className="text-[10px] text-muted-foreground">overall</p>
+                        {sessions.map((session) => {
+                          const isSelected = compareIds.includes(session.id);
+                          return (
+                            <div
+                              key={session.id}
+                              className={cn(
+                                "flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors",
+                                isSelected ? "border-brand-500 bg-brand-500/10" : "border-border/60 hover:bg-muted/40",
+                              )}
+                            >
+                              <div className="flex items-center gap-2 flex-1">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => toggleCompare(session.id)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="size-3.5 rounded border-muted-foreground/50 accent-brand-500"
+                                />
+                                <button onClick={() => openSession(session.id)} className="flex-1 text-left">
+                                  <p className="text-sm font-medium">{session.title}</p>
+                                  <p className="text-[10px] text-muted-foreground">
+                                    {new Date(session.createdAt).toLocaleDateString()}
+                                    {session.durationSec && ` • ${Math.round(session.durationSec)}s`}
+                                  </p>
+                                </button>
                               </div>
-                              <ChevronRight className="size-4 text-muted-foreground" />
+                              <div className="flex items-center gap-3">
+                                <div className="text-right">
+                                  <p className="text-lg font-bold tabular-nums">{session.overall}</p>
+                                  <p className="text-[10px] text-muted-foreground">overall</p>
+                                </div>
+                                <ChevronRight className="size-4 text-muted-foreground" />
+                              </div>
                             </div>
-                          </button>
-                        ))}
+                          );
+                        })}
                       </div>
                     </ScrollArea>
                   )}
@@ -489,6 +544,85 @@ export default function CoachPage() {
                 </div>
               </div>
             ) : null}
+          </>
+        )}
+
+        {view === "compare" && compareSessions.length === 2 && (
+          <>
+            <Button variant="ghost" className="mb-4 gap-2" onClick={() => { setView("list"); setCompareSessions([]); setCompareIds([]); }}>
+              <ArrowLeft className="size-4" /> Back to sessions
+            </Button>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              {compareSessions.map((s, idx) => (
+                <Card key={s.id}>
+                  <CardHeader>
+                    <CardTitle className="text-sm">
+                      <span className="text-muted-foreground">Session {idx + 1}:</span> {s.title}
+                    </CardTitle>
+                    <p className="text-[10px] text-muted-foreground">
+                      {new Date(s.createdAt).toLocaleDateString()}
+                      {s.durationSec && ` • ${Math.round(s.durationSec)}s`}
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <ScoreRing value={s.overall} label="Overall" color="stroke-brand-500" />
+                      <ScoreRing value={s.confidence} label="Confidence" color="stroke-emerald-500" />
+                      <ScoreRing value={s.clarity} label="Clarity" color="stroke-blue-500" />
+                      <ScoreRing value={s.persuasion} label="Persuasion" color="stroke-amber-500" />
+                      <ScoreRing value={s.structure} label="Structure" color="stroke-purple-500" />
+                    </div>
+                    <div className="space-y-2">
+                      <ScoreBar value={s.confidence} label="Confidence" />
+                      <ScoreBar value={s.clarity} label="Clarity" />
+                      <ScoreBar value={s.persuasion} label="Persuasion" />
+                      <ScoreBar value={s.structure} label="Structure" />
+                    </div>
+                    {s.suggestions.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold mb-1">Top Suggestion</p>
+                        <p className="text-xs text-muted-foreground">{s.suggestions[0]}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Delta comparison */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <TrendingUp className="size-4" /> Comparison Delta
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-5 gap-4 text-center">
+                  {(["overall", "confidence", "clarity", "persuasion", "structure"] as const).map((dim) => {
+                    const a = compareSessions[0][dim];
+                    const b = compareSessions[1][dim];
+                    const diff = b - a;
+                    const label = dim.charAt(0).toUpperCase() + dim.slice(1);
+                    return (
+                      <div key={dim}>
+                        <p className={`text-lg font-bold ${diff > 0 ? "text-green-500" : diff < 0 ? "text-red-500" : "text-muted-foreground"}`}>
+                          {diff > 0 ? "+" : ""}{diff}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{label}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="mt-3 text-[10px] text-muted-foreground text-center">
+                  {compareSessions[1].overall > compareSessions[0].overall
+                    ? `↑ Session 2 scored ${compareSessions[1].overall - compareSessions[0].overall} points higher`
+                    : compareSessions[1].overall === compareSessions[0].overall
+                      ? "→ Same overall score"
+                      : `↓ Session 2 scored ${compareSessions[0].overall - compareSessions[1].overall} points lower`}
+                </p>
+              </CardContent>
+            </Card>
           </>
         )}
       </div>
