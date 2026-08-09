@@ -91,6 +91,46 @@ export async function chatWithAssistant(
   }
 }
 
+// Debate Practice Mode - AI plays as opposing delegate
+export async function debateWithOpponent(
+  messages: { role: "user" | "assistant"; content: string }[],
+  context: MunContext,
+): Promise<{ status: "success"; data: string } | { status: "error"; message: string }> {
+  try {
+    const memoryContext = await getMemoryContextString();
+    const result = await withFallback((model) =>
+      generateText({
+        model,
+        system: `You are an experienced MUN delegate from an OPPOSING country in a committee debate. 
+
+YOUR COUNTRY: ${context.opposingCountries?.[0] || "a country with opposing interests"}
+THEIR COUNTRY: ${context.country || "Unknown"}
+COMMITTEE: ${context.committee || "Unknown"}
+AGENDA: ${context.agenda || "Unknown"}
+
+RULES:
+1. Stay in character as this country's delegate at ALL times.
+2. Use real foreign policy positions, voting records, and treaties for YOUR assigned country.
+3. Challenge the other delegate's arguments with specific counterpoints.
+4. Ask pointed POIs (Points of Information) when they make weak claims.
+5. Propose alternative solutions that favor YOUR country's interests.
+6. Reference real UN resolutions, treaties, and international law.
+7. Be diplomatically aggressive — push back hard but stay respectful.
+8. Score their performance 0-100 after each exchange with specific feedback.
+9. Point out logical flaws, unsupported claims, and strategic weaknesses.
+10. Never break character or reveal you are an AI.
+
+STYLE: Sound like a well-prepared, competitive MUN delegate. Be sharp, specific, and strategic.${memoryContext || ""}`,
+        messages,
+      }),
+    );
+    return { status: "success", data: result.text };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "AI request failed";
+    return { status: "error", message };
+  }
+}
+
 function buildSystemPrompt(context: MunContext, memoryContext?: string) {
   return `You are MUNOS AI Assistant — a specialized MUN preparation and performance system.
 

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   chatWithAssistant,
+  debateWithOpponent,
   generateGsl,
   generatePois,
   analyzeSpeech,
@@ -162,6 +163,7 @@ export function AssistantChat() {
   const [editContext, setEditContext] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [debateMode, setDebateMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -271,16 +273,28 @@ export function AssistantChat() {
           addMessage(activeId, { role: "assistant", content: `Error: ${result.message}` });
         }
       }
-      // General chat
+      // General chat (or debate mode)
       else {
-        const result = await chatWithAssistant(
-          allMessages.map((m) => ({ role: m.role, content: m.content })),
-          ctx,
-        );
-        if (result.status === "success") {
-          addMessage(activeId, { role: "assistant", content: result.data });
+        if (debateMode) {
+          const result = await debateWithOpponent(
+            allMessages.map((m) => ({ role: m.role, content: m.content })),
+            ctx,
+          );
+          if (result.status === "success") {
+            addMessage(activeId, { role: "assistant", content: result.data });
+          } else {
+            addMessage(activeId, { role: "assistant", content: `Error: ${result.message}` });
+          }
         } else {
-          addMessage(activeId, { role: "assistant", content: `Error: ${result.message}` });
+          const result = await chatWithAssistant(
+            allMessages.map((m) => ({ role: m.role, content: m.content })),
+            ctx,
+          );
+          if (result.status === "success") {
+            addMessage(activeId, { role: "assistant", content: result.data });
+          } else {
+            addMessage(activeId, { role: "assistant", content: `Error: ${result.message}` });
+          }
         }
       }
     } catch {
@@ -395,6 +409,14 @@ export function AssistantChat() {
               </div>
             </div>
             <div className="flex items-center gap-1">
+              <Button
+                size="sm"
+                variant={debateMode ? "default" : "ghost"}
+                onClick={() => setDebateMode(!debateMode)}
+                className={debateMode ? "bg-orange-500 hover:bg-orange-600 text-white" : ""}
+              >
+                ⚔️ {debateMode ? "Debating" : "Debate"}
+              </Button>
               <Button size="sm" variant="ghost" onClick={handleNewChat}>
                 <Plus className="mr-1 size-3" /> New
               </Button>
@@ -441,6 +463,12 @@ export function AssistantChat() {
               </button>
             ))}
           </div>
+
+          {debateMode && (
+            <div className="mt-3 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-xs text-orange-600">
+              ⚔️ <span className="font-semibold">Debate Mode</span> — AI will argue against your position. Pick a country & committee in Context to begin.
+            </div>
+          )}
         </div>
 
         {/* Messages */}
