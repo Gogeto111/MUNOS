@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, Radio, AlertTriangle, Lightbulb } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Loader2, Radio, AlertTriangle, Lightbulb, History, Trash2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { generateSituationAnalysis } from "@/lib/actions/situation-room";
+
+const HISTORY_KEY = "munos-situation-history";
 
 interface SituationUpdate {
   type: "breaking" | "talking_point" | "poi" | "resolution_implication";
@@ -16,6 +19,32 @@ interface SituationUpdate {
   source?: string;
 }
 
+interface AnalysisEntry {
+  country: string;
+  committee: string;
+  agenda: string;
+  content: string;
+  ts: number;
+}
+
+function loadHistory(): AnalysisEntry[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); } catch { return []; }
+}
+
+function saveHistory(entry: AnalysisEntry) {
+  if (typeof window === "undefined") return;
+  const history = loadHistory();
+  history.unshift(entry);
+  if (history.length > 20) history.pop();
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+function clearHistory() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(HISTORY_KEY);
+}
+
 export function SituationRoom() {
   const [country, setCountry] = useState("");
   const [committee, setCommittee] = useState("");
@@ -23,6 +52,9 @@ export function SituationRoom() {
   const [loading, setLoading] = useState(false);
   const [updates, setUpdates] = useState<SituationUpdate[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<AnalysisEntry[]>([]);
+
+  useEffect(() => { setHistory(loadHistory()); }, []);
 
   const handleAnalyze = async () => {
     if (!country || !committee || !agenda) return;
@@ -41,6 +73,8 @@ export function SituationRoom() {
           whyItMatters: `This analysis is tailored for ${country} in ${committee} on ${agenda}`,
           source: "AI Analysis",
         }]);
+        saveHistory({ country, committee, agenda, content: result.data, ts: Date.now() });
+        setHistory(loadHistory());
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate analysis");
@@ -106,6 +140,58 @@ export function SituationRoom() {
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Analysis History */}
+      {history.length > 0 && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <History className="size-4" /> Past Analyses
+            </CardTitle>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground hover:text-red-500"
+              onClick={() => { clearHistory(); setHistory([]); }}
+            >
+              <Trash2 className="size-3" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="max-h-[30vh]">
+              <div className="space-y-2">
+                {history.map((entry, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setCountry(entry.country);
+                      setCommittee(entry.committee);
+                      setAgenda(entry.agenda);
+                      setUpdates([{
+                        type: "breaking",
+                        title: "Situation Analysis",
+                        content: entry.content,
+                        whyItMatters: `This analysis is tailored for ${entry.country} in ${entry.committee} on ${entry.agenda}`,
+                        source: "AI Analysis",
+                      }]);
+                    }}
+                    className="flex w-full items-start gap-3 rounded-lg border border-border/40 p-3 text-left transition-colors hover:bg-muted/30"
+                  >
+                    <Clock className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-sm font-medium">{entry.country} · {entry.committee}</p>
+                      <p className="text-[10px] text-muted-foreground">{entry.agenda}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(entry.ts).toLocaleDateString()} {new Date(entry.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
