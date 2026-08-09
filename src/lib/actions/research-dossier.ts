@@ -20,7 +20,7 @@ export interface Source {
   title: string;
   url: string;
   tier: SourceTier;
- 可信度: number; // 0-100
+  credibility: number; // 0-100
 }
 
 // ---------------------------------------------------------------------------
@@ -110,7 +110,7 @@ const DossierSchema = z.object({
     title: z.string(),
     url: z.string(),
     tier: z.number().describe("1=Official, 2=Research, 3=General"),
-   可信度: z.number().describe("Credibility score 0-100"),
+    credibility: z.number().describe("Credibility score 0-100"),
   })).describe("All sources used with tier and credibility"),
 });
 

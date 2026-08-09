@@ -380,7 +380,7 @@ export function ResearchAgent() {
                         >
                           Tier {s.tier}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">{s.可信度}%</span>
+                        <span className="text-xs text-muted-foreground">{s.credibility}%</span>
                       </div>
                     ))}
                   </div>
