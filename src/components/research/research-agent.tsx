@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { generateResearchDossier, type ResearchDossier } from "@/lib/actions/research-dossier";
+import { generateResearchDossier } from "@/lib/actions/research-dossier";
+import type { ResearchDossier } from "@/lib/actions/research-dossier-types";
 
 const PAGES = [
   { id: "executive", label: "Executive Brief", icon: "📋" },
