@@ -6,6 +6,19 @@ import { isAuthConfigured } from "@/lib/public-env";
 import { listBookmarkedConferenceIds, toggleBookmark } from "@/lib/actions/conference";
 
 const STORAGE_KEY = "munos.saved.conferences";
+const META_KEY = "munos.saved.conferences.meta";
+
+export interface SavedConferenceMeta {
+  id: string;
+  name: string;
+  slug: string;
+  country: string;
+  city: string;
+  startDate: string;
+  endDate: string;
+  website?: string;
+  savedAt: number;
+}
 
 function readLocal(): Set<string> {
   if (typeof window === "undefined") return new Set();
@@ -24,6 +37,18 @@ function writeLocal(ids: Set<string>) {
   } catch {
     // storage unavailable (private mode) — ignore
   }
+}
+
+function readMeta(): Record<string, SavedConferenceMeta> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(META_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function writeMeta(meta: Record<string, SavedConferenceMeta>) {
+  try { window.localStorage.setItem(META_KEY, JSON.stringify(meta)); } catch {}
 }
 
 export function useSavedConferences() {
@@ -48,7 +73,7 @@ export function useSavedConferences() {
   }, []);
 
   const toggle = React.useCallback(
-    async (conferenceId: string) => {
+    async (conferenceId: string, meta?: Omit<SavedConferenceMeta, "id" | "savedAt">) => {
       const wasSaved = saved.has(conferenceId);
       const optimistic = new Set(saved);
       if (wasSaved) optimistic.delete(conferenceId);
@@ -57,6 +82,15 @@ export function useSavedConferences() {
       setSaved(optimistic);
       writeLocal(optimistic);
       setPending((p) => new Set(p).add(conferenceId));
+
+      // Store/remove metadata
+      const allMeta = readMeta();
+      if (!wasSaved && meta) {
+        allMeta[conferenceId] = { ...meta, id: conferenceId, savedAt: Date.now() };
+      } else {
+        delete allMeta[conferenceId];
+      }
+      writeMeta(allMeta);
 
       if (isAuthConfigured) {
         const res = await toggleBookmark(conferenceId);
@@ -82,6 +116,7 @@ export function useSavedConferences() {
           next.delete(conferenceId);
           return next;
         });
+        toast.success(wasSaved ? "Removed from saved" : "Saved for later");
       }
     },
     [saved],
@@ -92,5 +127,9 @@ export function useSavedConferences() {
     isSaved: (id: string) => saved.has(id),
     toggle,
     isPending: (id: string) => pending.has(id),
+    getSavedMeta: (): SavedConferenceMeta[] => {
+      const meta = readMeta();
+      return Object.values(meta).sort((a, b) => b.savedAt - a.savedAt);
+    },
   };
 }

@@ -6,6 +6,7 @@ import { DiscoverToolbar } from "@/components/explore/discover-toolbar";
 import { SearchAutocomplete } from "@/components/explore/search-autocomplete";
 import { InstagramDiscovery } from "@/components/explore/instagram-discovery";
 import { ConferenceSubmissionForm } from "@/components/explore/conference-submission";
+import { MyConferences } from "@/components/explore/my-conferences";
 import { Container } from "@/components/shared/container";
 import {
   parseDiscoverFilters,
@@ -243,6 +244,11 @@ export default async function DiscoverPage({
             </Link>
           </div>
         )}
+      </Container>
+
+      {/* My Conferences */}
+      <Container className="mt-16">
+        <MyConferences />
       </Container>
 
       {/* Instagram MUN Discovery */}

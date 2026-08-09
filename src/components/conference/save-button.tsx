@@ -5,12 +5,14 @@ import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSaved } from "@/providers/saved-provider";
 import { cn } from "@/lib/utils";
+import type { SavedConferenceMeta } from "@/hooks/use-saved-conferences";
 
 type SaveButtonProps = React.ComponentProps<typeof Button> & {
   conferenceId: string;
+  conferenceMeta?: Omit<SavedConferenceMeta, "id" | "savedAt">;
 };
 
-export function SaveButton({ conferenceId, className, ...props }: SaveButtonProps) {
+export function SaveButton({ conferenceId, conferenceMeta, className, ...props }: SaveButtonProps) {
   const { isSaved, toggle, isPending } = useSaved();
   const saved = isSaved(conferenceId);
   const pending = isPending(conferenceId);
@@ -26,7 +28,7 @@ export function SaveButton({ conferenceId, className, ...props }: SaveButtonProp
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
-        toggle(conferenceId);
+        toggle(conferenceId, conferenceMeta);
       }}
       className={cn(
         "rounded-full transition-all",

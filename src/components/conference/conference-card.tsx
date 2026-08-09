@@ -79,6 +79,14 @@ export function ConferenceCard({
           <div className="absolute right-3 top-3">
             <SaveButton
               conferenceId={conference.id}
+              conferenceMeta={{
+                name: conference.name,
+                slug: conference.slug,
+                country: conference.country,
+                city: conference.city,
+                startDate: conference.startDate.toISOString(),
+                endDate: conference.endDate.toISOString(),
+              }}
               className="bg-white/85 text-foreground shadow-sm backdrop-blur hover:bg-white"
               size="icon"
             />
