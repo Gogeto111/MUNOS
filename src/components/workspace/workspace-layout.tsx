@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   FileText,
   LayoutGrid,
+  Mic,
   Settings,
   Sparkles,
   type LucideIcon,
@@ -25,6 +26,7 @@ import { PositionPapersPanel } from "@/components/workspace/position-papers-pane
 import { AiCopilotPanel } from "@/components/workspace/ai-copilot-panel";
 import { WorkspaceSettings } from "@/components/workspace/workspace-settings";
 import { ExportButton } from "@/components/workspace/export-button";
+import { VoiceAgent } from "@/components/workspace/voice-agent";
 import type { ConferenceOption } from "@/components/workspace/create-workspace-form";
 
 export interface WorkspaceData {
@@ -58,6 +60,7 @@ export function WorkspaceLayout({
   }[] = [
     { value: "overview", label: "Overview", icon: LayoutGrid },
     { value: "papers", label: "Position Papers", icon: FileText },
+    { value: "voice", label: "Voice Agent", icon: Mic },
     { value: "ai", label: "AI Copilot", icon: Sparkles },
     { value: "settings", label: "Settings", icon: Settings },
   ];
@@ -95,6 +98,9 @@ export function WorkspaceLayout({
             workspaceId={workspace.id}
             committees={workspace.committees}
           />
+        </TabsContent>
+        <TabsContent value="voice" className="mt-0">
+          <VoiceAgent />
         </TabsContent>
         <TabsContent value="ai" className="mt-0">
           <AiCopilotPanel workspaceId={workspace.id} committees={workspace.committees} />
