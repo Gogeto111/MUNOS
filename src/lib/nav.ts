@@ -9,7 +9,6 @@ import {
   Target,
   Trophy,
   UserRound,
-  Video,
   type LucideIcon,
 } from "lucide-react";
 
@@ -30,10 +29,9 @@ export const NAV_ITEMS: NavItem[] = [
 
   // PREPARATION
   { label: "Workspaces", href: "/workspaces", icon: FolderKanban, group: "preparation" },
-  { label: "Speech Coach", href: "/coach", icon: Video, group: "preparation" },
   { label: "Simulator", href: "/simulator", icon: Target, group: "preparation" },
   { label: "Situation Room", href: "/situation-room", icon: Shield, group: "preparation" },
-  { label: "Scoring", href: "/scoring", icon: Trophy, group: "preparation" },
+  { label: "Performance", href: "/scoring", icon: Trophy, group: "preparation" },
 
   // OPTIONAL
   { label: "Settings", href: "/settings", icon: Settings, group: "optional" },

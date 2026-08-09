@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import { generateSituationAnalysis } from "@/lib/actions/situation-room";
 
 const HISTORY_KEY = "munos-situation-history";
@@ -53,6 +54,7 @@ export function SituationRoom() {
   const [updates, setUpdates] = useState<SituationUpdate[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<AnalysisEntry[]>([]);
+  const [analysisType, setAnalysisType] = useState<"full" | "poi" | "counter" | "bloc">("full");
 
   useEffect(() => { setHistory(loadHistory()); }, []);
 
@@ -61,16 +63,24 @@ export function SituationRoom() {
     setLoading(true);
     setError(null);
 
+    const prompts: Record<string, string> = {
+      full: `Give me a full situation analysis for ${country} in ${committee} on ${agenda}. Cover: key allies, opponents, likely blocs, hot-button issues, and 3 strategic moves ${country} should make right now.`,
+      poi: `Generate 5 hard-hitting POIs ${country} can use in ${committee} on ${agenda}. Each should target a weak argument from opposing countries.`,
+      counter: `What are the 3 strongest arguments against ${country}'s position on ${agenda}? For each, give a counter-argument ${country} can use.`,
+      bloc: `Which countries should ${country} ally with in ${committee} on ${agenda}? List 5 allies, shared interests, and a draft working paper outline.`,
+    };
+
     try {
-      const result = await generateSituationAnalysis(country, committee, agenda);
+      const result = await generateSituationAnalysis(country, committee, agenda, prompts[analysisType]);
       if (result.status === "error") {
         setError(result.message);
       } else {
+        const titles: Record<string, string> = { full: "Situation Analysis", poi: "POI Generator", counter: "Counter-Arguments", bloc: "Bloc Builder" };
         setUpdates([{
           type: "breaking",
-          title: "Situation Analysis",
+          title: titles[analysisType],
           content: result.data,
-          whyItMatters: `This analysis is tailored for ${country} in ${committee} on ${agenda}`,
+          whyItMatters: `Tailored for ${country} in ${committee} on ${agenda}`,
           source: "AI Analysis",
         }]);
         saveHistory({ country, committee, agenda, content: result.data, ts: Date.now() });
@@ -97,9 +107,29 @@ export function SituationRoom() {
             <Input placeholder="Committee" value={committee} onChange={(e) => setCommittee(e.target.value)} />
             <Input placeholder="Agenda topic" value={agenda} onChange={(e) => setAgenda(e.target.value)} />
           </div>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {[
+              { key: "full" as const, label: "Full Analysis", icon: "📋" },
+              { key: "poi" as const, label: "Quick POIs", icon: "💬" },
+              { key: "counter" as const, label: "Counter-Args", icon: "⚔️" },
+              { key: "bloc" as const, label: "Bloc Builder", icon: "🤝" },
+            ].map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setAnalysisType(t.key)}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors",
+                  analysisType === t.key ? "border-brand-500 bg-brand-500/10 text-brand-600" : "border-border/60 bg-card/60 text-muted-foreground hover:bg-muted",
+                )}
+              >
+                <span>{t.icon}</span> {t.label}
+              </button>
+            ))}
+          </div>
           <Button onClick={handleAnalyze} disabled={!country || !committee || !agenda || loading} className="mt-3">
             {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Radio className="mr-2 size-4" />}
-            Analyze Situation
+            {loading ? "Analyzing..." : "Analyze"}
           </Button>
         </CardContent>
       </Card>

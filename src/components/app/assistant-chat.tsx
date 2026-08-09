@@ -77,11 +77,11 @@ function autoTitle(messages: Message[]): string {
 const QUICK_ACTIONS = [
   { label: "GSL 60s", icon: "🎤", action: "gsl60" },
   { label: "GSL 90s", icon: "🎤", action: "gsl90" },
-  { label: "GSL 120s", icon: "🎤", action: "gsl120" },
-  { label: "POIs", icon: "⚔️", action: "poi" },
-  { label: "Analyze Speech", icon: "📝", action: "speech" },
+  { label: "Counter Argument", icon: "⚔️", action: "counter" },
+  { label: "POIs", icon: "💬", action: "poi" },
+  { label: "Bloc Strategy", icon: "🤝", action: "bloc" },
+  { label: "Yield Points", icon: "🕊️", action: "yield" },
   { label: "Resolution", icon: "📜", action: "resolution" },
-  { label: "Strategy", icon: "🎯", action: "strategy" },
   { label: "Practice POI", icon: "🧠", action: "practice" },
 ];
 
@@ -344,11 +344,11 @@ export function AssistantChat() {
     const prompts: Record<string, string> = {
       gsl60: `Write me a 60-second GSL for ${country} in ${committee} on ${agenda}. Use structured output.`,
       gsl90: `Write me a 90-second GSL for ${country} in ${committee} on ${agenda}. Use structured output.`,
-      gsl120: `Write me a 120-second GSL for ${country} in ${committee} on ${agenda}. Use structured output.`,
+      counter: `Give me 3 strong counter-arguments against the most common position on ${agenda} that ${country} can use in ${committee}. For each, include the argument, evidence, and a diplomatic way to deliver it.`,
       poi: `Generate 5 POIs I can use in ${committee} on ${agenda}. Use structured output.`,
-      speech: `Analyze this speech and score it 0-100. Paste your speech below.`,
+      bloc: `What bloc should ${country} form in ${committee} on ${agenda}? List 3-5 ideal allied countries, a bloc name, and a shared position paper outline.`,
+      yield: `Give me 3 powerful yield points for ${country} in ${committee} on ${agenda}. Each should be a short, punchy sentence I can use to respond to opposing arguments.`,
       resolution: `Draft 5 actionable resolution clauses for ${agenda} that ${country} could propose.`,
-      strategy: `What is ${country}'s optimal strategy in ${committee} on ${agenda}?`,
       practice: `Throw me a challenging POI as if you're from an opposing country on ${agenda}.`,
     };
 
