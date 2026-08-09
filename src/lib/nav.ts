@@ -3,7 +3,6 @@ import {
   Compass,
   FolderKanban,
   LayoutDashboard,
-  Mic,
   Search,
   Settings,
   Shield,
