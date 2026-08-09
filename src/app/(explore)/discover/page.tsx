@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { CalendarSearch, Compass, X, Camera } from "lucide-react";
+import { CalendarSearch, Compass, X, Camera, Search } from "lucide-react";
 import { getDb } from "@/lib/prisma";
 import { ConferenceCard } from "@/components/conference/conference-card";
 import { DiscoverToolbar } from "@/components/explore/discover-toolbar";
 import { SearchAutocomplete } from "@/components/explore/search-autocomplete";
 import { InstagramDiscovery } from "@/components/explore/instagram-discovery";
+import { ConferenceSubmissionForm } from "@/components/explore/conference-submission";
 import { Container } from "@/components/shared/container";
 import {
   parseDiscoverFilters,
@@ -247,6 +248,19 @@ export default async function DiscoverPage({
       {/* Instagram MUN Discovery */}
       <Container className="mt-16">
         <InstagramDiscovery />
+      </Container>
+
+      {/* Submit Conference */}
+      <Container className="mt-16">
+        <div className="mb-6 text-center">
+          <h2 className="text-2xl font-bold tracking-tight">Know a real conference?</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Submit it here and we&apos;ll add it to the database.
+          </p>
+        </div>
+        <div className="mx-auto max-w-2xl">
+          <ConferenceSubmissionForm />
+        </div>
       </Container>
     </div>
   );

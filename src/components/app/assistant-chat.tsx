@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Bot, User, Loader2, Settings2, Sparkles } from "lucide-react";
+import { Send, Bot, User, Loader2, Settings2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import {
   chatWithAssistant,
   type MunContext,
@@ -14,6 +13,43 @@ import {
 interface Message {
   role: "user" | "assistant";
   content: string;
+}
+
+const STORAGE_KEY = "munos-assistant-messages";
+const CONTEXT_KEY = "munos-assistant-context";
+
+function loadMessages(): Message[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveMessages(msgs: Message[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs.slice(-100)));
+  } catch {}
+}
+
+function loadContext(): MunContext {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(CONTEXT_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveContext(ctx: MunContext) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CONTEXT_KEY, JSON.stringify(ctx));
+  } catch {}
 }
 
 const QUICK_ACTIONS = [
@@ -34,9 +70,27 @@ export function AssistantChat() {
   const [loading, setLoading] = useState(false);
   const [context, setContext] = useState<MunContext>({});
   const [editContext, setEditContext] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    setMessages(loadMessages());
+    setContext(loadContext());
+    setInitialized(true);
+  }, []);
+
+  // Save messages to localStorage when they change
+  useEffect(() => {
+    if (initialized) saveMessages(messages);
+  }, [messages, initialized]);
+
+  // Save context to localStorage when it changes
+  useEffect(() => {
+    if (initialized) saveContext(context);
+  }, [context, initialized]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -46,12 +100,44 @@ export function AssistantChat() {
     scrollToBottom();
   }, [messages, loading, scrollToBottom]);
 
-  // Auto-focus textarea after message sent
   useEffect(() => {
     if (!loading && textareaRef.current) {
       textareaRef.current.focus();
     }
   }, [loading]);
+
+  // Handle URL params from Research Agent "Prepare Me" button
+  useEffect(() => {
+    if (!initialized) return;
+    const params = new URLSearchParams(window.location.search);
+    const countryParam = params.get("country");
+    const committeeParam = params.get("committee");
+    const agendaParam = params.get("agenda");
+    const contextParam = params.get("context");
+
+    if (countryParam || committeeParam || agendaParam || contextParam) {
+      setContext((prev) => ({
+        ...prev,
+        ...(countryParam ? { country: countryParam } : {}),
+        ...(committeeParam ? { committee: committeeParam } : {}),
+        ...(agendaParam ? { agenda: agendaParam } : {}),
+        ...(contextParam ? { assistantContext: contextParam } : {}),
+      }));
+      if (contextParam) {
+        const userMessage: Message = {
+          role: "user",
+          content: `I just finished researching. Here's my research context:\n\n${contextParam}`,
+        };
+        setMessages((prev) => [...prev, userMessage]);
+      }
+      window.history.replaceState({}, "", "/assistant");
+    }
+  }, [initialized]);
+
+  const clearHistory = () => {
+    setMessages([]);
+    localStorage.removeItem(STORAGE_KEY);
+  };
 
   const sendMessage = async (text?: string) => {
     const msg = text || input.trim();
@@ -147,14 +233,26 @@ export function AssistantChat() {
               )}
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setEditContext(!editContext)}
-          >
-            <Settings2 className="mr-1 size-3" />
-            {editContext ? "Done" : "Context"}
-          </Button>
+          <div className="flex items-center gap-1">
+            {messages.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearHistory}
+                className="text-muted-foreground hover:text-red-500"
+              >
+                <Trash2 className="size-3" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setEditContext(!editContext)}
+            >
+              <Settings2 className="mr-1 size-3" />
+              {editContext ? "Done" : "Context"}
+            </Button>
+          </div>
         </div>
 
         {/* Context editor */}

@@ -1,77 +1,120 @@
-export enum SourceTier {
-  OFFICIAL = 1,
-  RESEARCH = 2,
-  GENERAL = 3,
-}
-
-export interface Source {
-  title: string;
-  url: string;
-  tier: SourceTier;
-  credibility: number;
-}
-
 export interface ResearchDossier {
   executiveBrief: {
     whatIsHappening: string;
     whyItMatters: string;
-    whatDoesUnSay: string;
     currentSituation: string;
+    whyCommitteeShouldCare: string;
+  };
+  agendaDeepDive: {
+    historicalBackground: string;
+    currentSituation: string;
+    majorCauses: string[];
+    majorConsequences: string[];
+    importantActors: string[];
+    majorDisputes: string[];
+    keyTerminology: Array<{ term: string; definition: string }>;
   };
   countryPosition: {
     officialPosition: string;
     relevantPolicies: string[];
-    previousStatements: string[];
-    votingBehavior: string;
+    historicalInvolvement: string[];
     treaties: string[];
-    alliances: string[];
-    regionalInterests: string;
+    relevantInternationalCommitments: string[];
+    governmentStatements: string[];
+    votingRecord: string[];
+    relevantRegionalInterests: string;
+    economicInterests: string;
+    securityInterests: string;
+    politicalInterests: string;
+    likelyNegotiatingPriorities: string[];
   };
-  agendaDeepDive: {
-    keyIssues: string[];
-    causes: string[];
-    currentDevelopments: string[];
-    majorDisputes: string[];
-    importantTerminology: { term: string; definition: string }[];
+  countryInterests: {
+    whatDoesCountryWant: string[];
+    whatDoesCountryNeedToAvoid: string[];
+    whatWouldBePoliticallyDifficult: string[];
   };
-  otherCountries: {
-    country: string;
-    position: string;
-    interests: string[];
-    allies: string[];
-    opponents: string[];
-    vulnerabilities: string[];
-    likelyStance: string;
-  }[];
+  internationalLandscape: {
+    allies: Array<{ country: string; why: string }>;
+    likelyAllies: Array<{ country: string; why: string }>;
+    neutralStates: Array<{ country: string; why: string }>;
+    opposingStates: Array<{ country: string; why: string }>;
+    regionalBlocs: Array<{ name: string; position: string }>;
+    organizations: Array<{ name: string; relevance: string }>;
+  };
   unFramework: {
-    resolutions: { symbol: string; title: string; relevance: string }[];
-    charter: string[];
-    treaties: string[];
-    agencies: string[];
-    relevantArticles: string[];
+    charterProvisions: string[];
+    resolutions: Array<{ symbol: string; title: string; relevance: string }>;
+    treaties: Array<{ name: string; relevance: string }>;
+    conventions: string[];
+    relevantAgencies: Array<{ name: string; role: string }>;
   };
-  munApplication: {
-    realisticProposals: string[];
-    solutions: string[];
-    clauses: string[];
-    fundingMechanisms: string[];
-    implementation: string[];
-    monitoring: string[];
-    cooperation: string[];
-  };
-  attackMaterial: {
+  currentAffairs: Array<{
+    whatHappened: string;
+    when: string;
+    whyItMatters: string;
+    whyItMattersToCountry: string;
+    source: string;
+  }>;
+  evidence: Array<{
+    type: string;
+    content: string;
+    source: string;
+  }>;
+  diplomaticAmmunition: {
     contradictions: string[];
-    votingInconsistencies: string[];
-    treatyInconsistencies: string[];
+    inconsistentPolicies: string[];
     implementationFailures: string[];
-    relevantStatistics: string[];
-    diplomaticWeaknesses: string[];
+    treatyInconsistencies: string[];
+    votingContradictions: string[];
+    relevantHistoricalPositions: string[];
   };
-  sources: {
-    id: number;
+  poiBank: Array<{
+    text: string;
+    type: string;
+    targetCountry: string;
+    rationale: string;
+  }>;
+  defenseBank: Array<{
+    expectedAttack: string;
+    whyTheyMayUseIt: string;
+    bestResponse: string;
+    followUpResponse: string;
+  }>;
+  policyOptions: Array<{
+    problem: string;
+    proposal: string;
+    implementation: string;
+    funding: string;
+    monitoring: string;
+    responsibleActors: string[];
+    potentialObstacle: string;
+    howToAddressObstacle: string;
+  }>;
+  resolutionMaterial: {
+    preambulatoryClauses: string[];
+    operativeClauses: string[];
+    subclauses: string[];
+    implementationMechanisms: string[];
+    fundingMechanisms: string[];
+    monitoringMechanisms: string[];
+    timelines: string[];
+    responsibleOrganizations: string[];
+  };
+  gslMaterial: {
+    strongestOpeningHook: string;
+    strongestCountryPosition: string;
+    strongestEvidence: string;
+    strongestSolution: string;
+    strongestClosingHook: string;
+  };
+  takeaways: string[];
+  sources: Array<{
     title: string;
-    url: string;
+    organization: string;
+    date: string;
     tier: number;
-    credibility: number;
-  }[];
+    url: string;
+    supports: string;
+  }>;
+  assistantContext: string;
 }
