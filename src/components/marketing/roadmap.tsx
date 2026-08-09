@@ -19,8 +19,8 @@ const PHASES = [
     label: "Live",
     title: "AI Research Engine",
     description:
-      "8-page research dossiers with country positions, UN frameworks, attack material, and sourced claims.",
-    items: ["Research agent (8-page dossier)", "Position paper builder", "Topic briefings", "Source hierarchy (Tier 1/2/3)", "Live web search integration"],
+      "16-section research dossiers with country positions, UN frameworks, attack material, and sourced claims.",
+    items: ["Research agent (16-section dossier)", "Position paper builder", "Topic briefings", "Source hierarchy (Tier 1/2/3)", "Live web search integration"],
     status: "live" as const,
   },
   {
@@ -34,21 +34,21 @@ const PHASES = [
   },
   {
     phase: "Phase 4",
-    label: "Building",
+    label: "Live",
     title: "AI Debate Assistant",
     description:
       "GSL builder, POI engine, speech coach, and committee simulation — all understanding your context.",
     items: ["GSL builder (60/90/120s)", "POI engine (ask + answer)", "Speech coach (0-100 scoring)", "Committee simulation", "Voice mode (STT/TTS)"],
-    status: "building" as const,
+    status: "live" as const,
   },
   {
     phase: "Phase 5",
-    label: "Next",
+    label: "Live",
     title: "MUN Command Center",
     description:
       "Personal AI memory, scoring engine, situation room, and research-to-debate pipeline.",
     items: ["Personal AI memory", "MUN scoring engine", "Situation room", "Research → debate conversion", "AI fallback system"],
-    status: "planned" as const,
+    status: "live" as const,
   },
 ];
 

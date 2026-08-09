@@ -7,8 +7,8 @@ const CAPABILITIES = [
   {
     icon: Brain,
     title: "AI Research Agent",
-    description:
-      "Generate 8-page research dossiers with country positions, UN frameworks, attack material, and sourced claims — not generic summaries.",
+      description:
+        "Generate 16-section research dossiers with country positions, UN frameworks, attack material, and sourced claims — not generic summaries.",
   },
   {
     icon: Mic,

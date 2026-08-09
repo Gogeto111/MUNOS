@@ -22,7 +22,7 @@ const FAQS = [
   {
     question: "How does the AI research agent work?",
     answer:
-      "输入 a country, committee, and agenda topic. MUNOS generates an 8-page research dossier with country positions, UN frameworks, attack material, resolution clauses, and sourced claims. It pulls from real UN sources, government positions, and think tanks — with source hierarchy so you know what to trust.",
+      "输入 a country, committee, and agenda topic. MUNOS generates a 16-section research dossier with country positions, UN frameworks, attack material, resolution clauses, and sourced claims. It pulls from real UN sources, government positions, and think tanks — with source hierarchy so you know what to trust.",
   },
   {
     question: "What's the GSL builder?",
