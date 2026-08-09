@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { ok, fail, toActionError, type ActionState } from "@/lib/actions";
+import { ok, toActionError, type ActionState } from "@/lib/actions";
 
 export async function exportUserData(): Promise<ActionState<Record<string, unknown>>> {
   try {
@@ -45,7 +45,7 @@ export async function exportUserData(): Promise<ActionState<Record<string, unkno
         role: user.role,
       },
       awards,
-      certificates: certificates.map(({ fileKey, ...rest }) => rest),
+      certificates,
       committees,
       countries,
       socialLinks,

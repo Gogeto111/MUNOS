@@ -116,7 +116,6 @@ export function CalendarGrid({
   const cellConferences = Array.from({ length: daysInMonth }, (_, i) =>
     conferencesOnDay(i + 1),
   );
-  const maxPerDay = Math.max(...cellConferences.map((c) => c.length), 0);
 
   return (
     <div className="space-y-6">

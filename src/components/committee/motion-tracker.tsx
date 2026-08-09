@@ -83,7 +83,6 @@ export function MotionTracker({
   onCreateMotion,
   onVote,
   onSetStatus,
-  totalDelegates,
 }: MotionTrackerProps) {
   const [showForm, setShowForm] = useState(false);
   const [motionType, setMotionType] = useState<MotionType>("moderated-caucus");
@@ -104,9 +103,6 @@ export function MotionTracker({
     setDuration("");
     setShowForm(false);
   };
-
-  const passedMotions = motions.filter((m) => m.status === "passed");
-  const failedMotions = motions.filter((m) => m.status === "failed");
 
   return (
     <div className="space-y-3">

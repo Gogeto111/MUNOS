@@ -41,7 +41,6 @@ interface ConferenceAnalyticsProps {
   scores: { label: string; value: number }[];
   committeeDistribution: { label: string; count: number }[];
   speakingData: { label: string; value: number }[];
-  monthlyScores: { label: string; value: number }[];
 }
 
 function filterByTimeRange(
@@ -70,7 +69,6 @@ export function ConferenceAnalytics({
   scores,
   committeeDistribution,
   speakingData,
-  monthlyScores,
 }: ConferenceAnalyticsProps) {
   const [timeRange, setTimeRange] = useState("all");
 

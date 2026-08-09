@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/accordion";
 import { SectionHeading } from "@/components/conference/conference-sections";
 import { submitFaqQuestion } from "@/lib/actions/conference";
-import { cn } from "@/lib/utils";
+
 
 export function FaqSection({
   conferenceId,

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
+import { APP_NAME } from "@/lib/constants";
 import { publicEnv, isAuthConfigured } from "@/lib/public-env";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { ClerkThemedProvider } from "@/providers/clerk-provider";

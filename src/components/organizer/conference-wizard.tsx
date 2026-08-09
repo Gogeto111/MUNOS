@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Check, Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -93,13 +93,6 @@ export function ConferenceWizard() {
     setData((prev) => ({
       ...prev,
       venue: { ...prev.venue, ...fields },
-    }));
-  }
-
-  function updateOrganizer(fields: Partial<ConferenceDraft["organizer"]>) {
-    setData((prev) => ({
-      ...prev,
-      organizer: { ...prev.organizer, ...fields },
     }));
   }
 

@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
-  Radio, Settings, Mic, MessageSquare, Brain, Lightbulb, Shield,
-  Clock, ChevronRight, Zap, RotateCcw, Save, ArrowLeft,
+  Radio, Settings, Mic, Brain, Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

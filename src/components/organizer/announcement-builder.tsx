@@ -6,9 +6,6 @@ import {
   Send,
   Clock,
   Eye,
-  Users,
-  ChevronDown,
-  Check,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,7 +65,6 @@ export function AnnouncementBuilder() {
   const [scheduleTime, setScheduleTime] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
 
   const isScheduled = !!scheduleDate && !!scheduleTime;
 
@@ -89,7 +85,6 @@ export function AnnouncementBuilder() {
     setSending(true);
     setTimeout(() => {
       setSending(false);
-      setSent(true);
       const targetLabel = audience === "all"
         ? "all delegates"
         : audience === "committee"
@@ -106,7 +101,6 @@ export function AnnouncementBuilder() {
       setTargetValue("");
       setScheduleDate("");
       setScheduleTime("");
-      setSent(false);
     }, 1500);
   }
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   Loader2, Trophy, TrendingUp, Target, Star, Camera, FileVideo,
-  ChevronRight, ArrowLeft, BarChart3, Award, GitCompareArrows, Sparkles,
+  ArrowLeft, BarChart3, Award, GitCompareArrows, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -154,7 +154,6 @@ export default function PerformancePage() {
 
   // Coach state
   const [coachSessions, setCoachSessions] = useState<SessionSummary[]>([]);
-  const [coachLoading, setCoachLoading] = useState(true);
   const [coachView, setCoachView] = useState<"list" | "detail" | "compare">("list");
   const [selectedSession, setSelectedSession] = useState<SessionDetail | null>(null);
   const [compareIds, setCompareIds] = useState<string[]>([]);
@@ -171,7 +170,6 @@ export default function PerformancePage() {
     setScoreLog(loadScoreLog());
     listVideoCoachSessions().then((r) => {
       if (r.status === "success" && r.data) setCoachSessions(r.data);
-      setCoachLoading(false);
     });
   }, []);
 

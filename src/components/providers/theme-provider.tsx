@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { getSettings } from "@/lib/actions/profile";
 
 type Theme = "light" | "dark" | "system";
@@ -25,8 +25,6 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
     // Apply cached theme immediately to avoid flash
     const cached = localStorage.getItem(STORAGE_KEY) as Theme | null;
@@ -41,7 +39,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         applyTheme(theme);
         localStorage.setItem(STORAGE_KEY, theme);
       }
-      setMounted(true);
     });
 
     // Listen for system preference changes

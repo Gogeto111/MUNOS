@@ -26,7 +26,6 @@ export function RegisterButton({
   const [attendeeCount, setAttendeeCount] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
   const [submitting, setSubmitting] = React.useState(false);
-  const [workspaceId, setWorkspaceId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -39,7 +38,6 @@ export function RegisterButton({
         if (cancelled) return;
         if (regResult.status === "success" && regResult.data) {
           setRegistered(regResult.data.registered);
-          setWorkspaceId(regResult.data.workspaceId);
         }
         if (countResult.status === "success" && countResult.data) {
           setAttendeeCount(countResult.data.count);
@@ -62,7 +60,6 @@ export function RegisterButton({
       const result = await registerForConference(conferenceId);
       if (result.status === "success") {
         setRegistered(true);
-        setWorkspaceId(result.data?.workspaceId ?? null);
         setAttendeeCount((c) => c + 1);
         toast.success(result.message);
       } else {

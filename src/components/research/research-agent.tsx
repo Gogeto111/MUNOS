@@ -69,14 +69,6 @@ export function ResearchAgent() {
   const [copied, setCopied] = useState(false);
   const [search, setSearch] = useState("");
 
-  const searchableText = useMemo(() => {
-    if (!dossier) return "";
-    const parts: string[] = [];
-    const add = (v: unknown) => { if (typeof v === "string") parts.push(v); else if (Array.isArray(v)) v.forEach(add); else if (v && typeof v === "object") Object.values(v).forEach(add); };
-    add(dossier);
-    return parts.join(" ").toLowerCase();
-  }, [dossier]);
-
   const sectionMatches = useMemo(() => {
     if (!search.trim() || !dossier) return null;
     const q = search.toLowerCase();

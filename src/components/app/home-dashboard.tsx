@@ -3,15 +3,15 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  Home, Compass, Bot, Search, FolderKanban, UserRound,
-  ChevronRight, Clock, Target, FileText, Award, Calendar,
-  Zap, ArrowRight, CheckCircle, Circle, Star, Globe,
+  Compass, Bot, Search, FolderKanban, UserRound,
+  ChevronRight, Calendar,
+  Zap, ArrowRight, CheckCircle, Circle, Globe,
+  Rocket,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 
 // ---------------------------------------------------------------------------
 // MUN Lifecycle
@@ -76,6 +76,7 @@ export function HomeDashboard() {
   const [currentStage, setCurrentStage] = useState(3); // Research stage by default
   const [completedStages, setCompletedStages] = useState<number[]>([0, 1, 2]);
   const [initialized, setInitialized] = useState(false);
+  const [onboardingComplete, setOnboardingComplete] = useState(true);
 
   useEffect(() => {
     setUpcoming(loadUpcoming());
@@ -87,6 +88,8 @@ export function HomeDashboard() {
         setCompletedStages(data.completedStages ?? [0, 1, 2]);
       }
     } catch {}
+    const onboardingDone = localStorage.getItem("munos_onboarding_complete") === "true";
+    setOnboardingComplete(onboardingDone);
     setInitialized(true);
   }, []);
 
@@ -116,6 +119,28 @@ export function HomeDashboard() {
           Everything you need, from discovery to portfolio.
         </p>
       </div>
+
+      {/* Onboarding CTA */}
+      {!onboardingComplete && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="flex flex-col sm:flex-row items-start sm:items-center gap-4 py-5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 shrink-0">
+              <Rocket className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-sm">Complete Your Setup</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Tell us about your experience and interests so we can personalize MUNOS for you.
+              </p>
+            </div>
+            <Button asChild size="sm" className="shrink-0">
+              <Link href="/onboarding">
+                Set Up <ArrowRight className="ml-1 h-3 w-3" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* MUN Lifecycle */}
       <Card className="border-brand-500/20">

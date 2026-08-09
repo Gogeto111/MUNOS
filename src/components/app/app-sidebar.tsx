@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/shared/logo";
 import { NotificationCenter } from "@/components/shared/notification-center";
-import { NAV_ITEMS, type NavItem } from "@/lib/nav";
+import { NAV_ITEMS } from "@/lib/nav";
 
 export function AppSidebar() {
   const pathname = usePathname();

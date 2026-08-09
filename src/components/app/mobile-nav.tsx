@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Compass, Bot, Search, FolderKanban, UserRound } from "lucide-react";
+import { Home, Compass, Bot, Search, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const MOBILE_NAV = [

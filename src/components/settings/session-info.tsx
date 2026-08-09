@@ -8,7 +8,7 @@ import { Clock, LogOut, User, Mail, Shield } from "lucide-react";
 
 export function SessionInfo() {
   const { user } = useUser();
-  const { signOut, sessionId } = useAuth();
+  const { signOut } = useAuth();
 
   const displayName = [user?.firstName, user?.lastName]
     .filter(Boolean)

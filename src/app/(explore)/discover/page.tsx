@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarSearch, Compass, X, Camera, Search } from "lucide-react";
+import { CalendarSearch, Compass, X } from "lucide-react";
 import { getDb } from "@/lib/prisma";
 import { ConferenceCard } from "@/components/conference/conference-card";
 import { DiscoverToolbar } from "@/components/explore/discover-toolbar";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mic, Loader2, Copy, ChevronDown, Clock, Zap, Swords, AlertTriangle } from "lucide-react";
+import { Mic, Loader2, Copy, ChevronDown, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";

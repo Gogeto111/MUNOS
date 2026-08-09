@@ -6,13 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Progress } from "@/components/ui/progress";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+
 import { cn } from "@/lib/utils";
 import { DelegateCard, AddDelegateForm, type Delegate } from "./delegate-card";
 import { SpeakingQueue } from "./speaking-queue";
@@ -31,7 +25,7 @@ import {
   Timer,
   Vote,
   BarChart3,
-  Plus,
+
   Search,
   X,
 } from "lucide-react";
@@ -72,7 +66,6 @@ export function ChairDashboard() {
   const [speakerTime, setSpeakerTime] = useState(DEFAULT_SPEAKER_TIME);
   const [timeRemaining, setTimeRemaining] = useState(DEFAULT_SPEAKER_TIME);
   const [timerRunning, setTimerRunning] = useState(false);
-  const [speakerTimeTotal, setSpeakerTimeTotal] = useState(DEFAULT_SPEAKER_TIME);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Motions
@@ -81,9 +74,6 @@ export function ChairDashboard() {
   // Session
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionLog, setSessionLog] = useState<SessionLog[]>([]);
-
-  // Stats
-  const [totalSessions] = useState(0);
 
   // Timer logic
   useEffect(() => {
@@ -113,7 +103,7 @@ export function ChairDashboard() {
       setDelegates((prev) =>
         prev.map((d) =>
           d.id === delegateId
-            ? { ...d, speakingTime: d.speakingTime + speakerTimeTotal }
+            ? { ...d, speakingTime: d.speakingTime + speakerTime }
             : d
         )
       );
@@ -126,7 +116,7 @@ export function ChairDashboard() {
       setTimeRemaining(speakerTime);
       setTimerRunning(true);
     }
-  }, [currentSpeakerIndex, queue, speakerTime, speakerTimeTotal]);
+  }, [currentSpeakerIndex, queue, speakerTime]);
 
   const getDelegateById = (id: string) => delegates.find((d) => d.id === id);
 
@@ -159,21 +149,6 @@ export function ChairDashboard() {
     setDelegates((prev) => prev.filter((d) => d.id !== id));
     setQueue((prev) => prev.filter((qid) => qid !== id));
     if (d) addLog("Delegate Removed", d.country);
-  };
-
-  const handleToggleStatus = (id: string) => {
-    setDelegates((prev) =>
-      prev.map((d) => {
-        if (d.id !== id) return d;
-        const next =
-          d.status === "absent"
-            ? "present"
-            : d.status === "present"
-              ? "present-vote"
-              : "absent";
-        return { ...d, status: next };
-      })
-    );
   };
 
   // Queue actions
@@ -249,16 +224,6 @@ export function ChairDashboard() {
     ) {
       setCurrentSpeakerIndex((prev) => prev + 1);
     }
-  };
-
-  const handleGrantPOI = (id: string) => {
-    setDelegates((prev) =>
-      prev.map((d) =>
-        d.id === id ? { ...d, poisReceived: d.poisReceived + 1 } : d
-      )
-    );
-    const d = getDelegateById(id);
-    if (d) addLog("POI Granted", d.country);
   };
 
   // Timer controls

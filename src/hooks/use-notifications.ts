@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   clientGetNotifications,
-  clientGetUnreadCount,
   clientAddNotification,
   clientMarkAsRead,
   clientMarkAllAsRead,

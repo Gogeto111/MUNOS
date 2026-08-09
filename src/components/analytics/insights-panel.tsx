@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   TrendingUp,
   TrendingDown,
-  Minus,
   Lightbulb,
   Target,
   Trophy,

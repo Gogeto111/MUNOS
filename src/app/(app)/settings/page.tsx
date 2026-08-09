@@ -2,7 +2,6 @@
 
 import { Moon, Sun, Monitor } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { getSettings, updateSettings, type SettingsInput } from "@/lib/actions/profile";
@@ -16,7 +15,6 @@ const themes = [
 export default function AppearanceSettingsPage() {
   const [settings, setSettings] = useState<SettingsInput>({ theme: "system" });
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     getSettings().then((result) => {
@@ -30,9 +28,7 @@ export default function AppearanceSettingsPage() {
   async function handleToggle(key: keyof SettingsInput, value: boolean | string) {
     const next = { ...settings, [key]: value };
     setSettings(next);
-    setSaving(true);
     const result = await updateSettings({ [key]: value } as SettingsInput);
-    setSaving(false);
     if (result.status === "success") {
       toast.success(result.message);
     } else {

@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Brain, Plus, Trash2, Search, Clock, MessageSquare, Mic, Vote, AlertTriangle } from "lucide-react";
+import { Brain, Plus, Trash2, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useMunContext, type SessionEvent } from "@/lib/mun-context";
+import { useMunContext } from "@/lib/mun-context";
 
 type FilterType = "all" | "speech" | "poi" | "caucus" | "vote" | "motion" | "note" | "crisis";
 
@@ -44,12 +44,6 @@ export function SessionMemory() {
     .filter((e) => filter === "all" || e.type === filter)
     .filter((e) => !search || e.content.toLowerCase().includes(search.toLowerCase()) || e.country?.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => b.timestamp - a.timestamp);
-
-  const addNote = () => {
-    if (!newNote.trim()) return;
-    ctx.addEvent({ type: "note", content: newNote.trim() });
-    setNewNote("");
-  };
 
   const addQuickNote = () => {
     if (!quickNote.trim()) return;

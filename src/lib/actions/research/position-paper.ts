@@ -3,7 +3,6 @@
 import { generateObject } from "ai";
 import { getBestModel } from "@/lib/ai-model";
 import { z } from "zod";
-import { ok } from "@/lib/actions";
 import { isAiConfigured, isWebSearchConfigured } from "@/lib/env";
 import { performWebSearch } from "@/lib/actions/web-search";
 

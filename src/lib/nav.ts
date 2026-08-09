@@ -9,6 +9,7 @@ import {
   Building2,
   BarChart3,
   Gavel,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -26,6 +27,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Research", href: "/research-agent", icon: Search, group: "core" },
   { label: "Workspace", href: "/workspaces", icon: FolderKanban, group: "core" },
   { label: "Chair Mode", href: "/chair", icon: Gavel, group: "core" },
+  { label: "Blocs", href: "/blocs", icon: Users, group: "core" },
   { label: "Passport", href: "/passport", icon: UserRound, group: "core" },
   { label: "Organizer", href: "/organizer", icon: Building2, group: "core" },
   { label: "Analytics", href: "/analytics", icon: BarChart3, group: "core" },

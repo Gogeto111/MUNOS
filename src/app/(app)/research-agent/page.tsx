@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { ResearchAgent } from "@/components/research/research-agent";
 import { KnowledgeBase } from "@/components/shared/knowledge-base";
 

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { format as formatDate } from "date-fns";
-import { Clock, MapPin, Printer } from "lucide-react";
+import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 

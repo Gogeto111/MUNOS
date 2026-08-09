@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Send, Bot, User, Loader2, Settings2, Trash2, Plus, MessageSquare,
-  Clock, X, ChevronRight, ThumbsUp, ThumbsDown, Copy,
+  X, ChevronRight, ThumbsUp, ThumbsDown, Copy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

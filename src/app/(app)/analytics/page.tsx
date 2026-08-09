@@ -22,7 +22,7 @@ export default async function AnalyticsPage() {
 
     const db = getDb();
 
-    const [awards, committees, countries, scores, activities, simulations] =
+    const [, committees, , scores] =
       await Promise.all([
         db.award.findMany({
           where: { userId: user.id },
@@ -38,16 +38,6 @@ export default async function AnalyticsPage() {
         db.aiScore.findMany({
           where: { workspace: { userId: user.id } },
           orderBy: { createdAt: "asc" },
-        }),
-        db.activity.findMany({
-          where: { userId: user.id },
-          orderBy: { createdAt: "desc" },
-          take: 20,
-        }),
-        db.committeeSimulation.findMany({
-          where: { userId: user.id },
-          orderBy: { createdAt: "desc" },
-          take: 5,
         }),
       ]);
 
@@ -152,10 +142,6 @@ export default async function AnalyticsPage() {
           count: c.count,
         }))}
         speakingData={speakingData}
-        monthlyScores={scoreTimeline.map((s) => ({
-          label: s.label,
-          value: s.score,
-        }))}
       />
     );
   } catch (error) {

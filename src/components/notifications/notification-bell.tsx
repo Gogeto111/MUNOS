@@ -21,9 +21,7 @@ import {
   Award,
   Calendar,
   Info,
-  AlertCircle,
 } from "lucide-react";
-import { toast } from "sonner";
 import {
   clientGetNotifications,
   clientMarkAsRead,
@@ -115,9 +113,6 @@ export function NotificationBell() {
       const wasUnread = notifications.find((n) => n.id === id && !n.read);
       return wasUnread ? Math.max(0, prev - 1) : prev;
     });
-    } else {
-      toast.error(result.message);
-    }
   };
 
   return (

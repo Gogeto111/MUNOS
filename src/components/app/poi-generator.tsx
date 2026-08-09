@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare, Loader2, Copy, ChevronDown, Zap, Shield, Target, BookOpen, Cpu, RotateCcw, ArrowRight } from "lucide-react";
+import { MessageSquare, Loader2, Copy, ChevronDown, Zap, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";

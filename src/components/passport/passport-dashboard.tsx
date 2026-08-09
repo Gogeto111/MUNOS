@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import {
-  UserRound, Award, BookOpen, BarChart3, Settings, Shield, Eye, EyeOff,
-  Trophy, Medal, Star, Target, Clock, FileText, Globe, GraduationCap,
-  ChevronDown, Copy, Download, Lock, LockIcon, Camera, Edit3,
+  UserRound, Award, BarChart3, Shield,
+  Trophy, Medal, Star, Target, Clock, FileText, Globe,
+  Lock, Edit3, Download,
   TrendingUp, Users, MessageSquare, Mic, Lightbulb, CheckCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -175,8 +175,6 @@ export function PassportDashboard() {
   const update = (patch: Partial<PassportData>) => setData((d) => ({ ...d, ...patch }));
   const updatePrivacy = (patch: Partial<PassportData["privacy"]>) =>
     setData((d) => ({ ...d, privacy: { ...d.privacy, ...patch } }));
-  const updateStats = (patch: Partial<PassportData["stats"]>) =>
-    setData((d) => ({ ...d, stats: { ...d.stats, ...patch } }));
 
   const level = getLevel(data);
   const levelProgress = getLevelProgress(data);
