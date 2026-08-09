@@ -1,14 +1,11 @@
 import {
-  Bot,
+  Home,
   Compass,
-  FolderKanban,
-  LayoutDashboard,
+  Bot,
   Search,
-  Settings,
-  Shield,
-  Target,
-  Trophy,
+  FolderKanban,
   UserRound,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 
@@ -16,23 +13,15 @@ export interface NavItem {
   label: string;
   href: string;
   icon: LucideIcon;
-  group: "main" | "preparation" | "optional";
+  group: "core" | "system";
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  // MAIN
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, group: "main" },
-  { label: "AI Assistant", href: "/assistant", icon: Bot, group: "main" },
-  { label: "Research Agent", href: "/research-agent", icon: Search, group: "main" },
-  { label: "Discover MUNs", href: "/discover", icon: Compass, group: "main" },
-  { label: "Profile", href: "/profile", icon: UserRound, group: "main" },
-
-  // PREPARATION
-  { label: "Workspaces", href: "/workspaces", icon: FolderKanban, group: "preparation" },
-  { label: "Simulator", href: "/simulator", icon: Target, group: "preparation" },
-  { label: "Situation Room", href: "/situation-room", icon: Shield, group: "preparation" },
-  { label: "Performance", href: "/scoring", icon: Trophy, group: "preparation" },
-
-  // OPTIONAL
-  { label: "Settings", href: "/settings", icon: Settings, group: "optional" },
+  { label: "Home", href: "/dashboard", icon: Home, group: "core" },
+  { label: "Discover", href: "/discover", icon: Compass, group: "core" },
+  { label: "AI Assistant", href: "/assistant", icon: Bot, group: "core" },
+  { label: "Research", href: "/research-agent", icon: Search, group: "core" },
+  { label: "Workspace", href: "/workspaces", icon: FolderKanban, group: "core" },
+  { label: "Passport", href: "/passport", icon: UserRound, group: "core" },
+  { label: "Settings", href: "/settings", icon: Settings, group: "system" },
 ];
