@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 const PHASES = [
   {
     phase: "Phase 1",
-    label: "Today",
+    label: "Live",
     title: "The Delegate Operating System",
     description:
       "Profile, portfolio, certificates, dashboard, and settings — a complete, polished foundation.",
@@ -16,38 +16,38 @@ const PHASES = [
   },
   {
     phase: "Phase 2",
-    label: "Next",
+    label: "Live",
     title: "AI Research Engine",
     description:
-      "Position papers, research briefs, and topic deep-dives generated from verified sources.",
-    items: ["AI research assistant", "Position paper builder", "Topic briefings"],
-    status: "planned" as const,
+      "8-page research dossiers with country positions, UN frameworks, attack material, and sourced claims.",
+    items: ["Research agent (8-page dossier)", "Position paper builder", "Topic briefings", "Source hierarchy (Tier 1/2/3)", "Live web search integration"],
+    status: "live" as const,
   },
   {
     phase: "Phase 3",
-    label: "Soon",
+    label: "Live",
     title: "Conference Discovery",
     description:
-      "Find the world's best MUNs. Filter by region, size, committee, and travel budget.",
-    items: ["Conference marketplace", "Smart recommendations", "Organizer profiles"],
-    status: "planned" as const,
+      "Find MUNs worldwide. Filter by region, committee, format, and difficulty.",
+    items: ["Conference listings", "Organizer profiles", "Committee details", "Country matrices", "Reviews & ratings"],
+    status: "live" as const,
   },
   {
     phase: "Phase 4",
-    label: "Later",
-    title: "Committee Workspace",
+    label: "Building",
+    title: "AI Debate Assistant",
     description:
-      "Collaborative workspaces with live debate assistance for chairs and delegates.",
-    items: ["Committee workspaces", "Live debate assistant", "Resolution builder"],
-    status: "planned" as const,
+      "GSL builder, POI engine, speech coach, and committee simulation — all understanding your context.",
+    items: ["GSL builder (60/90/120s)", "POI engine (ask + answer)", "Speech coach (0-100 scoring)", "Committee simulation", "Voice mode (STT/TTS)"],
+    status: "building" as const,
   },
   {
     phase: "Phase 5",
-    label: "Vision",
-    title: "Networking & Community",
+    label: "Next",
+    title: "MUN Command Center",
     description:
-      "A global community of delegates — alumni networks, mentorship, and learning.",
-    items: ["Delegate networking", "Community", "Learning platform"],
+      "Personal AI memory, scoring engine, situation room, and research-to-debate pipeline.",
+    items: ["Personal AI memory", "MUN scoring engine", "Situation room", "Research → debate conversion", "AI fallback system"],
     status: "planned" as const,
   },
 ];
@@ -61,7 +61,7 @@ export function Roadmap() {
           eyebrow="Roadmap"
           title={
             <>
-              From portfolio to <span className="text-gradient">ecosystem</span>
+              From portfolio to <span className="text-gradient">AI command center</span>
             </>
           }
           description="MUNOS is built phase by phase, on one scalable architecture. Here's the journey."
@@ -78,11 +78,15 @@ export function Roadmap() {
                       "absolute left-0 top-1 grid size-8 place-items-center rounded-full border",
                       item.status === "live"
                         ? "border-brand-500/40 bg-brand-500/12 text-brand-600 dark:text-brand-400"
-                        : "border-border bg-card text-muted-foreground",
+                        : item.status === "building"
+                          ? "border-amber-500/40 bg-amber-500/12 text-amber-600 dark:text-amber-400"
+                          : "border-border bg-card text-muted-foreground",
                     )}
                   >
                     {item.status === "live" ? (
                       <Check className="size-4" />
+                    ) : item.status === "building" ? (
+                      <Circle className="size-3.5 animate-pulse" />
                     ) : (
                       <Circle className="size-3.5" />
                     )}
@@ -93,7 +97,9 @@ export function Roadmap() {
                         "rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider",
                         item.status === "live"
                           ? "bg-brand-600 text-white"
-                          : "bg-muted text-muted-foreground",
+                          : item.status === "building"
+                            ? "bg-amber-600 text-white"
+                            : "bg-muted text-muted-foreground",
                       )}
                     >
                       {item.phase}

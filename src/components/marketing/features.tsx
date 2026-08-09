@@ -58,11 +58,11 @@ const FEATURES = [
   },
 ];
 
-const UPCOMING = [
-  { icon: Sparkles, label: "AI research & briefs", phase: "Phase 2" },
-  { icon: Globe2, label: "Conference discovery", phase: "Phase 3" },
-  { icon: Users, label: "Committee workspaces", phase: "Phase 4" },
-  { icon: Video, label: "Live debate assistant", phase: "Phase 4" },
+const BUILT_NOW = [
+  { icon: Sparkles, label: "AI research & briefs", status: "live" },
+  { icon: Globe2, label: "Conference discovery", status: "live" },
+  { icon: Users, label: "Committee workspaces", status: "live" },
+  { icon: Video, label: "Live debate assistant", status: "building" },
 ];
 
 export function Features() {
@@ -76,7 +76,7 @@ export function Features() {
               Built for delegates, <span className="text-gradient">designed to scale</span>
             </>
           }
-          description="Phase 1 ships the complete delegate operating system — every feature architected so the platform can grow into the full MUN ecosystem without breaking."
+          description="The delegate operating system — every feature architected so the platform can grow into the full MUN ecosystem without breaking."
         />
 
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -102,10 +102,10 @@ export function Features() {
         <FadeIn delay={0.1}>
           <div className="mt-14 rounded-2xl border border-dashed border-border/80 bg-muted/30 p-6 sm:p-8">
             <p className="text-center text-sm font-medium uppercase tracking-widest text-muted-foreground">
-              Coming in later phases
+              Now available
             </p>
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {UPCOMING.map((item) => (
+              {BUILT_NOW.map((item) => (
                 <div
                   key={item.label}
                   className="flex items-center gap-3 rounded-xl border border-border/60 bg-card/60 px-4 py-3"
@@ -113,7 +113,7 @@ export function Features() {
                   <item.icon className="size-5 shrink-0 text-brand-500" />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{item.label}</p>
-                    <p className="text-xs text-muted-foreground">{item.phase}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{item.status}</p>
                   </div>
                 </div>
               ))}

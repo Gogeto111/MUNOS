@@ -11,7 +11,7 @@ import { Faq } from "@/components/marketing/faq";
 import { FreeForever } from "@/components/marketing/free-forever";
 
 export const metadata: Metadata = {
-  title: `${APP_NAME} — The Operating System for Model United Nations`,
+  title: `${APP_NAME} — AI-Powered MUN Operating System`,
   alternates: { canonical: "/" },
 };
 
@@ -36,9 +36,9 @@ export default function MarketingPage() {
       <Hero />
       <Features />
       <ProductDemo />
+      <Testimonials />
       <WhyMUNOS />
       <Roadmap />
-      <Testimonials />
       <Faq />
       <FreeForever />
     </>

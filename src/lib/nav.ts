@@ -1,36 +1,32 @@
 import {
-  BarChart3,
-  BookOpen,
-  Camera,
+  Bot,
   Compass,
-  FlaskConical,
   FolderKanban,
   LayoutDashboard,
-  Lightbulb,
-  MessageSquare,
-  Newspaper,
-  ScrollText,
   Search,
   Settings,
-  Trophy,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
 
-export const NAV_ITEMS: { label: string; href: string; icon: LucideIcon }[] = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Analytics", href: "/analytics", icon: BarChart3 },
-  { label: "Discover", href: "/discover", icon: Compass },
-  { label: "Profile", href: "/profile", icon: UserRound },
-  { label: "Workspaces", href: "/workspaces", icon: FolderKanban },
-  { label: "Resolutions", href: "/resolutions", icon: ScrollText },
-  { label: "Research", href: "/research", icon: Search },
-  { label: "Glossary", href: "/glossary", icon: BookOpen },
-  { label: "Tips", href: "/tips", icon: Lightbulb },
-  { label: "Simulator", href: "/simulator", icon: FlaskConical },
-  { label: "Coach", href: "/coach", icon: Camera },
-  { label: "News", href: "/news", icon: Newspaper },
-  { label: "Social", href: "/social", icon: MessageSquare },
-  { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
-  { label: "Settings", href: "/settings", icon: Settings },
+export interface NavItem {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  group: "main" | "preparation" | "optional";
+}
+
+export const NAV_ITEMS: NavItem[] = [
+  // MAIN
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, group: "main" },
+  { label: "AI Assistant", href: "/assistant", icon: Bot, group: "main" },
+  { label: "Research Agent", href: "/research", icon: Search, group: "main" },
+  { label: "Discover MUNs", href: "/discover", icon: Compass, group: "main" },
+  { label: "Profile", href: "/profile", icon: UserRound, group: "main" },
+
+  // PREPARATION
+  { label: "Workspaces", href: "/workspaces", icon: FolderKanban, group: "preparation" },
+
+  // OPTIONAL
+  { label: "Settings", href: "/settings", icon: Settings, group: "optional" },
 ];

@@ -10,9 +10,12 @@ const INCLUDED = [
   "PDF portfolio export",
   "Unlimited certificate uploads",
   "Dashboard with analytics",
+  "AI research assistant (Gemini-powered)",
+  "GSL builder & POI engine",
+  "Speech coach with scoring",
+  "Committee simulation",
   "Full theming — dark, light, system",
   "Privacy controls & notifications",
-  "All future Phase 1 features",
 ];
 
 export function FreeForever() {
@@ -30,17 +33,17 @@ export function FreeForever() {
 
             <span className="inline-flex items-center gap-2 rounded-full border border-brand-500/25 bg-brand-500/8 px-3 py-1 text-xs font-medium uppercase tracking-widest text-brand-600 dark:text-brand-400">
               <Sparkles className="size-3.5" />
-              Free forever
+              Free to use
             </span>
 
             <h2 className="mt-6 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
               Everything you need.
               <br />
-              <span className="text-gradient">Nothing you have to pay for.</span>
+              <span className="text-gradient">No paywall surprises.</span>
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-pretty text-muted-foreground">
-              MUNOS is free for every delegate, forever. No trials, no credit
-              cards, no surprises.
+              MUNOS is free for every delegate. AI features use your own API keys —
+              you control the cost.
             </p>
 
             <div className="mx-auto mt-8 max-w-md text-left">
@@ -59,17 +62,14 @@ export function FreeForever() {
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button asChild size="lg">
                 <Link href="/sign-up">
-                  Create your free account
+                  Get started
                   <ArrowRight className="ml-2 size-4" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="ghost">
-                <Link href="#demo">Explore the product</Link>
+                <Link href="#features">See all features</Link>
               </Button>
             </div>
-            <p className="mt-4 text-xs text-muted-foreground">
-              Join delegates from 50+ countries. No credit card required.
-            </p>
           </div>
         </FadeIn>
       </Container>

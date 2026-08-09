@@ -166,6 +166,7 @@ model User {
   following UserFollow[] @relation("Following")
   followers UserFollow[] @relation("Followers")
   badges AchievementBadge[]
+  aiMemories UserAiMemory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -885,6 +886,25 @@ model AiMemory {
 
   @@unique([workspaceId, category])
   @@index([workspaceId])
+}
+
+// ---------------------------------------------------------------------------
+// Personal AI Memory — user-level, not workspace-scoped
+// ---------------------------------------------------------------------------
+
+model UserAiMemory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category  String   // e.g., "strengths", "weaknesses", "preferences", "style"
+  key       String   // e.g., "strong_pois", "needs_substantive_solutions"
+  value     String   @db.Text
+  confidence Float  @default(0.5)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, category, key])
+  @@index([userId])
 }
 
 enum SimulationStatus {

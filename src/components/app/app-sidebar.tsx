@@ -4,21 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/shared/logo";
-import { NAV_ITEMS } from "@/lib/nav";
+import { NAV_ITEMS, type NavItem } from "@/lib/nav";
 
-export function AppSidebar() {
+function NavGroup({ label, items }: { label: string; items: NavItem[] }) {
   const pathname = usePathname();
 
   return (
-    <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-border/60 bg-background/60 backdrop-blur lg:flex">
-      <div className="flex h-16 items-center border-b border-border/60 px-5">
-        <Link href="/" aria-label="MUNOS home">
-          <Logo />
-        </Link>
-      </div>
-
-      <nav className="flex-1 space-y-1 px-3 py-4">
-        {NAV_ITEMS.map((item) => {
+    <div>
+      <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+        {label}
+      </p>
+      <div className="space-y-0.5">
+        {items.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
           return (
@@ -37,11 +34,33 @@ export function AppSidebar() {
             </Link>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+export function AppSidebar() {
+  const mainItems = NAV_ITEMS.filter((i) => i.group === "main");
+  const prepItems = NAV_ITEMS.filter((i) => i.group === "preparation");
+  const optItems = NAV_ITEMS.filter((i) => i.group === "optional");
+
+  return (
+    <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-border/60 bg-background/60 backdrop-blur lg:flex">
+      <div className="flex h-16 items-center border-b border-border/60 px-5">
+        <Link href="/" aria-label="MUNOS home">
+          <Logo />
+        </Link>
+      </div>
+
+      <nav className="flex-1 space-y-6 px-3 py-4">
+        <NavGroup label="Main" items={mainItems} />
+        <NavGroup label="Preparation" items={prepItems} />
+        <NavGroup label="Optional" items={optItems} />
       </nav>
 
       <div className="border-t border-border/60 p-4">
         <p className="text-xs text-muted-foreground">
-          Phase 1 · v1.0.0
+          MUNOS v2.0
         </p>
       </div>
     </aside>

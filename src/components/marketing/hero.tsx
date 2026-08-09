@@ -55,9 +55,8 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.16, ease: EASE }}
             className="mx-auto mt-6 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg"
           >
-            MUNOS turns every conference, award, and committee into a polished
-            professional portfolio — and pairs it with the research and
-            preparation tools that win gavels.
+            AI-powered research, speech preparation, and committee simulation —
+            built for delegates who want to win gavels.
           </motion.p>
 
           <motion.div
@@ -68,7 +67,7 @@ export function Hero() {
           >
             <Button asChild size="lg" className="w-full sm:w-auto">
               <Link href="/sign-up">
-                Start free forever
+                Get started free
                 <ArrowRight className="ml-2 size-4" />
               </Link>
             </Button>
@@ -88,19 +87,8 @@ export function Hero() {
             transition={{ duration: 0.8, delay: 0.4 }}
             className="mt-8 flex items-center justify-center gap-3 text-sm text-muted-foreground"
           >
-            <div className="flex -space-x-2">
-              {["AK", "MJ", "SR", "PL"].map((initials, index) => (
-                <span
-                  key={initials}
-                  className="grid size-7 place-items-center rounded-full border-2 border-background bg-gradient-to-br from-brand-500 to-brand-700 text-[9px] font-semibold text-white"
-                  style={{ zIndex: 4 - index }}
-                >
-                  {initials}
-                </span>
-              ))}
-            </div>
             <span>
-              Trusted by delegates from <strong className="text-foreground">50+ countries</strong>
+              Built for delegates. Powered by AI.
             </span>
           </motion.div>
         </div>

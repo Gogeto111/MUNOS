@@ -12,37 +12,32 @@ const FAQS = [
   {
     question: "What exactly is MUNOS?",
     answer:
-      "MUNOS is an operating system for Model United Nations delegates. It centralizes your MUN career — profile, awards, certificates, committees, and portfolio — in one fast, beautiful platform, with more capabilities arriving in later phases.",
+      "MUNOS is an AI-powered operating system for Model United Nations delegates. It centralizes research, speech preparation, committee simulation, and your MUN career — profile, awards, certificates — in one platform.",
   },
   {
-    question: "Is it really free forever?",
+    question: "Is it really free?",
     answer:
-      "Yes. Phase 1 is completely free — every feature, no trial, no credit card, no hidden paywall. If we introduce premium capabilities in later phases, everything you use today stays free.",
+      "Yes. MUNOS is free to use. AI features use your own API keys (Gemini, OpenAI, etc.) — you control the cost. We don't charge subscription fees.",
   },
   {
-    question: "How does the public portfolio work?",
+    question: "How does the AI research agent work?",
     answer:
-      "Your portfolio is generated automatically from your profile data. It gets a public URL you can share with universities, clubs, and conference secretariats. You control exactly what's public through your privacy settings.",
+      "输入 a country, committee, and agenda topic. MUNOS generates an 8-page research dossier with country positions, UN frameworks, attack material, resolution clauses, and sourced claims. It pulls from real UN sources, government positions, and think tanks — with source hierarchy so you know what to trust.",
   },
   {
-    question: "Can I export my portfolio as a PDF?",
+    question: "What's the GSL builder?",
     answer:
-      "Absolutely. One click exports a beautifully formatted PDF of your entire portfolio — timeline, awards, certificates, committees, and countries — perfect for applications.",
+      "It generates General Speaker's List speeches for your specific country, committee, and agenda. You can customize length (60/90/120 seconds), tone (aggressive/diplomatic), and complexity. Then practice with the speech coach.",
   },
   {
-    question: "Where are my certificates stored?",
+    question: "How does the POI engine work?",
     answer:
-      "Certificates are stored securely in the cloud and are private to you by default. You can preview, search, filter, and organize them — or choose to feature them on your public portfolio.",
+      "After an AI delegate gives a speech, MUNOS generates POIs you can ask — based on contradictions, policy inconsistencies, and diplomatic openings. You can also practice answering POIs and get scored on relevance, diplomacy, and confidence.",
   },
   {
-    question: "Which countries and schools are supported?",
+    question: "Can I use MUNOS during actual conferences?",
     answer:
-      "All of them. MUNOS is global by design — any country, any school, any grade. We're built to serve delegates from every corner of the world.",
-  },
-  {
-    question: "Will you add AI and conference discovery?",
-    answer:
-      "Yes — that's the roadmap. AI research assistance, conference discovery, committee workspaces, and a global delegate community are planned for later phases, all on the same architecture you're using today.",
+      "Yes — the Situation Room provides live context during committee sessions. It tracks breaking news, committee developments, and generates real-time talking points and POIs based on what's happening.",
   },
   {
     question: "Is my data safe?",

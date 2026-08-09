@@ -1,16 +1,22 @@
-import { Gauge, Layers, Palette, Zap } from "lucide-react";
+import { Brain, Gauge, Layers, Zap } from "lucide-react";
 import { Container } from "@/components/shared/container";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { FadeIn } from "@/components/shared/fade-in";
 
 const STATS = [
-  { value: "50+", label: "Countries using MUNOS" },
-  { value: "10k", label: "Conferences tracked" },
-  { value: "100%", label: "Free, forever" },
-  { value: "0", label: "Hidden fees" },
+  { value: "8", label: "Page research dossiers" },
+  { value: "0-100", label: "Scoring system" },
+  { value: "3", label: "Source trust tiers" },
+  { value: "∞", label: "Practice sessions" },
 ];
 
 const REASONS = [
+  {
+    icon: Brain,
+    title: "AI that knows MUN",
+    description:
+      "Not a generic chatbot. Understands committees, resolutions, POIs, diplomatic protocol, and country positions.",
+  },
   {
     icon: Zap,
     title: "Fast by default",
@@ -18,22 +24,16 @@ const REASONS = [
       "Server-rendered pages, optimized images, and zero-jank animations. Lighthouse scores we actually care about.",
   },
   {
-    icon: Palette,
-    title: "Premium by design",
-    description:
-      "A design system inspired by the world's best products — dark mode, glass surfaces, and micro-interactions that feel alive.",
-  },
-  {
     icon: Layers,
-    title: "One profile, everywhere",
+    title: "Research to debate pipeline",
     description:
-      "Your portfolio is generated from your real data. Update once, and every surface — public page, exports, future apps — follows.",
+      "Research a topic, then instantly convert it into GSLs, POIs, resolution clauses, and speech practice — one continuous flow.",
   },
   {
     icon: Gauge,
-    title: "Built to scale to millions",
+    title: "Honest scoring",
     description:
-      "Feature-based architecture, normalized data, and server actions. MUNOS grows from one delegate to one million without a rewrite.",
+      "Every score comes with specific, actionable feedback. Not 'speak confidently' — 'move your strongest argument to the 10-second mark.'",
   },
 ];
 
@@ -45,10 +45,10 @@ export function WhyMUNOS() {
           eyebrow="Why MUNOS"
           title={
             <>
-              Engineering you can <span className="text-gradient">feel</span>
+              AI that understands <span className="text-gradient">how MUN actually works</span>
             </>
           }
-          description="MUNOS isn't another to-do app for delegates. It's a platform built with the discipline of the products you already love."
+          description="Built by delegates who were tired of generic AI tools that don't understand committees, resolutions, or diplomatic protocol."
         />
 
         <FadeIn delay={0.08}>
