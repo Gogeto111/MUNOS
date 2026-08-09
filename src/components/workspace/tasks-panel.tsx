@@ -1,6 +1,7 @@
 "use client";
 
-import { ListTodo } from "lucide-react";
+import { useState } from "react";
+import { ListTodo, Zap } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { taskInputSchema, type TaskInput } from "@/lib/validation/workspace";
@@ -29,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -37,6 +39,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+
+const TASK_TEMPLATES = [
+  { label: "GSL Speech", title: "Draft GSL speech", description: "Write and rehearse a 60-90 second General Speakers List speech.", priority: "HIGH" as const },
+  { label: "Position Paper", title: "Write position paper", description: "Draft a 1-2 page position paper covering country stance and proposed solutions.", priority: "HIGH" as const },
+  { label: "Research Dossier", title: "Research agenda topic", description: "Complete research dossier with country position, evidence, and POI bank.", priority: "MEDIUM" as const },
+  { label: "POI Practice", title: "Prepare POIs", description: "Draft 5-10 Points of Information for opposing arguments.", priority: "MEDIUM" as const },
+  { label: "Resolution Draft", title: "Draft resolution clauses", description: "Write preambulatory and operative clauses for a draft resolution.", priority: "MEDIUM" as const },
+  { label: "Bloc Strategy", title: "Plan bloc strategy", description: "Identify allies, draft working paper, and plan coalition building.", priority: "LOW" as const },
+];
 
 const EMPTY_TASK: TaskInput = {
   title: "",
@@ -114,6 +125,23 @@ export function TasksPanel({
             noValidate
           >
             <p className="text-sm font-medium">Add a task</p>
+            <div className="flex flex-wrap gap-1.5">
+              {TASK_TEMPLATES.map((t) => (
+                <button
+                  key={t.label}
+                  type="button"
+                  onClick={() => {
+                    form.setValue("title", t.title);
+                    form.setValue("description", t.description);
+                    form.setValue("priority", t.priority);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card/60 px-2 py-0.5 text-[10px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <Zap className="size-2.5" />
+                  {t.label}
+                </button>
+              ))}
+            </div>
             <FormField
               control={form.control}
               name="title"

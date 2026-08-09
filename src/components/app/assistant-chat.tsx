@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Send, Bot, User, Loader2, Settings2, Trash2, Plus, MessageSquare,
-  Clock, X, ChevronRight,
+  Clock, X, ChevronRight, ThumbsUp, ThumbsDown, Copy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -164,6 +164,27 @@ export function AssistantChat() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [debateMode, setDebateMode] = useState(false);
+  const [ratings, setRatings] = useState<Record<number, "up" | "down">>({});
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try { setRatings(JSON.parse(localStorage.getItem("munos-ratings") || "{}")); } catch {}
+    }
+  }, []);
+
+  const rateMessage = (idx: number, rating: "up" | "down") => {
+    setRatings((prev) => {
+      const next = { ...prev };
+      if (next[idx] === rating) delete next[idx];
+      else next[idx] = rating;
+      if (typeof window !== "undefined") localStorage.setItem("munos-ratings", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const copyMessage = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -504,6 +525,31 @@ export function AssistantChat() {
                   <div className="whitespace-pre-wrap">{msg.content}</div>
                 )}
               </div>
+              {msg.role === "assistant" && (
+                <div className="flex items-center gap-1 self-end">
+                  <button
+                    onClick={() => copyMessage(msg.content)}
+                    className="rounded p-1 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                    title="Copy"
+                  >
+                    <Copy className="size-3" />
+                  </button>
+                  <button
+                    onClick={() => rateMessage(i, "up")}
+                    className={cn("rounded p-1 transition-colors", ratings[i] === "up" ? "text-green-500" : "text-muted-foreground/50 hover:text-green-500")}
+                    title="Helpful"
+                  >
+                    <ThumbsUp className="size-3" />
+                  </button>
+                  <button
+                    onClick={() => rateMessage(i, "down")}
+                    className={cn("rounded p-1 transition-colors", ratings[i] === "down" ? "text-red-500" : "text-muted-foreground/50 hover:text-red-500")}
+                    title="Not helpful"
+                  >
+                    <ThumbsDown className="size-3" />
+                  </button>
+                </div>
+              )}
               {msg.role === "user" && (
                 <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
                   <User className="size-4" />
