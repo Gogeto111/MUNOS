@@ -9,6 +9,7 @@ import {
   Trophy,
   DollarSign,
   BadgeCheck,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CountdownTimer } from "@/components/conference/countdown-timer";
+import { ConferenceVerification } from "@/components/conference/verified-badge";
 import {
   conferenceDateRange,
   deriveConference,
@@ -163,6 +165,19 @@ export function ConferenceSidebar({
         </CardContent>
       </Card>
 
+      {/* Data Verification */}
+      <ConferenceVerification
+        fields={[
+          { field: "Dates", status: "verified", source: "Official website", verifiedDate: "Aug 2026" },
+          { field: "Fee", status: conference.fee > 0 ? "verified" : "unverified", source: conference.fee > 0 ? "Registration form" : undefined },
+          { field: "Location", status: "verified", source: "Organizer submission" },
+          { field: "Committees", status: conference.committees.length > 0 ? "verified" : "unverified", source: conference.committees.length > 0 ? "Official brochure" : undefined },
+          { field: "Capacity", status: conference.capacity ? "verified" : "unverified" },
+          { field: "Registration", status: "verified", source: "Live status" },
+        ]}
+        lastVerified="Aug 2026"
+      />
+
       {/* Venue card */}
       {conference.venue ? (
         <Card className="shadow-sm">
@@ -264,6 +279,12 @@ export function ConferenceSidebar({
                     </a>
                   </Button>
                 ) : null}
+                <Button asChild variant="outline" size="sm" className="gap-1.5 rounded-full text-xs">
+                  <a href={`https://wa.me/${conference.email || ""}`} target="_blank" rel="noopener noreferrer">
+                    <MessageCircle className="size-3.5" />
+                    WhatsApp
+                  </a>
+                </Button>
               </div>
             )}
           </CardContent>

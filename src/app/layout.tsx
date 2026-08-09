@@ -46,6 +46,12 @@ export const metadata: Metadata = {
   authors: [{ name: "MUNOS" }],
   creator: "MUNOS",
   category: "education",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "MUNOS",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -73,6 +79,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f7f8fc" },
     { media: "(prefers-color-scheme: dark)", color: "#0d1017" },
