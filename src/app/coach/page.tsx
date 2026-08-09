@@ -9,6 +9,8 @@ import {
   ChevronRight,
   ArrowLeft,
   BarChart3,
+  Award,
+  TrendingUp,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -307,6 +309,79 @@ export default function CoachPage() {
                     <p className="pt-2 text-[10px] text-muted-foreground">
                       Average across {sessions.length} session{sessions.length !== 1 ? "s" : ""}
                     </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Trend Chart */}
+              {sessions.length >= 2 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                      <TrendingUp className="size-4" /> Score Trend
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-end gap-1 h-24">
+                      {sessions.slice(-10).map((s, i) => {
+                        const height = Math.max(8, (s.overall / 100) * 96);
+                        const color = s.overall >= 80 ? "bg-green-500" : s.overall >= 60 ? "bg-yellow-500" : "bg-red-500";
+                        return (
+                          <div key={s.id} className="flex-1 flex flex-col items-center gap-1">
+                            <span className="text-[9px] font-mono text-muted-foreground">{s.overall}</span>
+                            <div className={`w-full rounded-t ${color}`} style={{ height: `${height}px` }} />
+                            <span className="text-[8px] text-muted-foreground">#{i + 1}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {sessions.length >= 3 && (
+                      <p className="mt-2 text-[10px] text-muted-foreground">
+                        {sessions[sessions.length - 1].overall > sessions[0].overall
+                          ? `↑ Improved ${sessions[sessions.length - 1].overall - sessions[0].overall} points since first session`
+                          : sessions[sessions.length - 1].overall === sessions[0].overall
+                            ? "→ Consistent performance"
+                            : `↓ Down ${sessions[0].overall - sessions[sessions.length - 1].overall} points — keep practicing`}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Achievements */}
+              {sessions.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                      <Award className="size-4 text-yellow-500" /> Achievements
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { icon: "🎯", label: "First Speech", desc: "Completed first analysis", unlocked: sessions.length >= 1 },
+                        { icon: "🔥", label: "On Fire", desc: "5+ sessions logged", unlocked: sessions.length >= 5 },
+                        { icon: "🏆", label: "Century Club", desc: "Scored 90+ overall", unlocked: sessions.some((s) => s.overall >= 90) },
+                        { icon: "📈", label: "Improver", desc: "Scored higher than first", unlocked: sessions.length >= 2 && sessions[sessions.length - 1].overall > sessions[0].overall },
+                        { icon: "💎", label: "Diamond Clarity", desc: "Clarity score 95+", unlocked: sessions.some((s) => s.clarity >= 95) },
+                        { icon: "🗣️", label: "Persuasive", desc: "Persuasion score 90+", unlocked: sessions.some((s) => s.persuasion >= 90) },
+                        { icon: "🧠", label: "Structured", desc: "Structure score 90+", unlocked: sessions.some((s) => s.structure >= 90) },
+                        { icon: "⭐", label: "Marathon", desc: "10+ sessions", unlocked: sessions.length >= 10 },
+                      ].map((a) => (
+                        <div
+                          key={a.label}
+                          className={`rounded-lg border p-2 text-center transition-colors ${
+                            a.unlocked
+                              ? "border-yellow-500/30 bg-yellow-500/10"
+                              : "border-border/30 bg-muted/20 opacity-50"
+                          }`}
+                        >
+                          <div className="text-lg">{a.icon}</div>
+                          <p className="text-[10px] font-semibold">{a.label}</p>
+                          <p className="text-[8px] text-muted-foreground">{a.desc}</p>
+                        </div>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               )}
