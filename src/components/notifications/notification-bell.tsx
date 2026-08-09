@@ -25,12 +25,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  getNotifications,
-  markAsRead,
-  markAllAsRead,
-  deleteNotification,
+  clientGetNotifications,
+  clientMarkAsRead,
+  clientMarkAllAsRead,
+  clientDeleteNotification,
   type NotificationItem,
-} from "@/lib/actions/notifications";
+} from "@/lib/notification-helpers";
 
 function timeAgo(dateStr: string): string {
   const now = Date.now();
@@ -83,11 +83,8 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
 
   const fetchNotifications = useCallback(async () => {
-    const result = await getNotifications();
-    if (result.status === "success" && result.data) {
-      setNotifications(result.data.notifications);
-      setUnreadCount(result.data.unreadCount);
-    }
+    const result = clientGetNotifications();
+    setNotifications(result);
     setLoading(false);
   }, []);
 
@@ -97,34 +94,27 @@ export function NotificationBell() {
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
-  const handleMarkAllRead = async () => {
-    const result = await markAllAsRead();
-    if (result.status === "success") {
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      setUnreadCount(0);
-    } else {
-      toast.error(result.message);
-    }
+  const handleMarkAllRead = () => {
+    clientMarkAllAsRead();
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadCount(0);
   };
 
-  const handleMarkRead = async (id: string) => {
-    const result = await markAsRead(id);
-    if (result.status === "success") {
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    }
+  const handleMarkRead = (id: string) => {
+    clientMarkAsRead(id);
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+    );
+    setUnreadCount((prev) => Math.max(0, prev - 1));
   };
 
-  const handleDelete = async (id: string) => {
-    const result = await deleteNotification(id);
-    if (result.status === "success") {
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-      setUnreadCount((prev) => {
-        const wasUnread = notifications.find((n) => n.id === id && !n.read);
-        return wasUnread ? Math.max(0, prev - 1) : prev;
-      });
+  const handleDelete = (id: string) => {
+    clientDeleteNotification(id);
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    setUnreadCount((prev) => {
+      const wasUnread = notifications.find((n) => n.id === id && !n.read);
+      return wasUnread ? Math.max(0, prev - 1) : prev;
+    });
     } else {
       toast.error(result.message);
     }
@@ -191,9 +181,9 @@ export function NotificationBell() {
                     <p className="text-sm font-medium leading-snug">
                       {n.title}
                     </p>
-                    {n.body && (
+                    {n.description && (
                       <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                        {n.body}
+                        {n.description}
                       </p>
                     )}
                     <p className="mt-1 text-xs text-muted-foreground/70">

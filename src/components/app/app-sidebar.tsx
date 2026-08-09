@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/shared/logo";
+import { NotificationCenter } from "@/components/shared/notification-center";
 import { NAV_ITEMS, type NavItem } from "@/lib/nav";
 
 export function AppSidebar() {
@@ -13,10 +14,11 @@ export function AppSidebar() {
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col border-r border-border/60 bg-background/60 backdrop-blur lg:flex">
-      <div className="flex h-14 items-center border-b border-border/60 px-4">
+      <div className="flex h-14 items-center justify-between border-b border-border/60 px-4">
         <Link href="/" aria-label="MUNOS home">
           <Logo />
         </Link>
+        <NotificationCenter />
       </div>
 
       <nav className="flex-1 space-y-1 px-2 py-3">

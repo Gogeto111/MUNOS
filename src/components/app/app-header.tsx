@@ -6,6 +6,7 @@ import { Menu, X, Search } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/shared/logo";
+import { NotificationCenter } from "@/components/shared/notification-center";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -84,6 +85,7 @@ export function AppHeader() {
 
       <div className="flex items-center gap-3">
         <GlobalSearch className="hidden w-64 lg:block" />
+        {isAuthConfigured && <NotificationCenter />}
         {isAuthConfigured ? (
           <ClerkAuthUser />
         ) : (

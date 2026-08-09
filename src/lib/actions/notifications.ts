@@ -6,9 +6,9 @@ import { ok, fail, toActionError, type ActionState } from "@/lib/actions";
 
 export interface NotificationItem {
   id: string;
-  type: string;
+  type: "conference_update" | "submission_status" | "achievement" | "reminder" | "system";
   title: string;
-  body: string | null;
+  description: string;
   read: boolean;
   createdAt: string;
 }
@@ -35,9 +35,9 @@ export async function getNotifications(): Promise<
     return ok("Loaded.", {
       notifications: notifications.map((n) => ({
         id: n.id,
-        type: n.type,
+        type: n.type as NotificationItem["type"],
         title: n.title,
-        body: n.body,
+        description: n.body ?? "",
         read: n.read,
         createdAt: n.createdAt.toISOString(),
       })),
