@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AssistantChat } from "@/components/app/assistant-chat";
+import { AssistantShell } from "@/components/app/assistant-shell";
 
 export const metadata: Metadata = {
   title: "AI Assistant | MUNOS",
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 export default function AssistantPage() {
   return (
     <div className="flex h-[calc(100dvh-8rem)] flex-col">
-      <AssistantChat />
+      <AssistantShell />
     </div>
   );
 }
