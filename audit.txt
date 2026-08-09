@@ -2,8 +2,10 @@
 Audit Report - Feature Summary
 ================================
 
-BUILD STATUS: ✅ PASSING (0 errors, warnings only)
-LAST COMMIT: 6749a12 fix: split research-dossier types from server action
+BUILD STATUS: ✅ PASSING (0 errors, 0 warnings blocking)
+TESTS: 170/170 PASSING ✅
+LINT: 0 errors, 59 warnings (unused vars only)
+LAST COMMITS: e6c916f, 526b317, 20b9471, 297982c, 831d0a6
 GIT REPOSITORY: https://github.com/Gogeto111/MUNOS.git
 VERCEL DEPLOYMENT: https://munos-alpha.vercel.app
 
@@ -12,218 +14,63 @@ PHASE STATUS
 ========================================
 
 Phase 1 - Delegate Operating System:    ✅ LIVE
-  - Profile, portfolio, certificates, dashboard, settings
-
-Phase 2 - AI Research Engine:           ✅ LIVE
-  - 8-page research dossiers, position papers, topic briefings
-  - Source hierarchy (Tier 1/2/3), live web search
-
-Phase 3 - Conference Discovery:         ✅ LIVE
-  - 22+ seeded conferences, filters, calendar, Instagram discovery
-
-Phase 4 - AI Debate Assistant:          ✅ LIVE
-  - AI Assistant command center, GSL builder, POI engine
-  - Speech coach, resolution drafter, committee simulation
-
+Phase 2 - AI Research Engine:           ✅ LIVE (16-section dossier)
+Phase 3 - Conference Discovery:         ✅ LIVE (20 real conferences)
+Phase 4 - AI Debate Assistant:          ✅ LIVE (multi-chat, structured output)
 Phase 5 - MUN Command Center:           ✅ LIVE
-  - Personal AI memory, MUN scoring engine, situation room
-  - Research-to-debate pipeline, AI fallback system
 
 ========================================
-NEW FEATURES IN THIS SESSION
+SESSION COMPLETED
 ========================================
 
-1. AI ASSISTANT (MUN Command Center)
-   - /assistant - Full chat interface with context setting
-   - Quick actions: GSL 60/90/120s, POIs, Speech, Resolution, Strategy, Practice, News
-   - Shift+Enter for newlines, auto-scroll, auto-focus
-   - System prompt: 12 core principles, brutal honesty, real data mandate
-   - GSL generator: Hook→Context→Position→Evidence→Proposal→Closing Hook
-   - Humanized responses, timing markers, actionable feedback
+1. REAL CONFERENCE DATA (20 conferences)
+   - HNMUN (Harvard, Boston)
+   - THIMUN The Hague 2027
+   - YMUNS (Yale, Singapore)
+   - NAMUN (Toronto)
+   - VMUN (Vancouver)
+   - Delhi MUN 2026
+   - ILMUNC India 2026 (UPenn/Chitkara)
+   - MUNindia 2026 (online)
+   - BMUN (UC Berkeley)
+   - ChoMUN (UChicago, crisis)
+   - UPMUNC (UPenn)
+   - NCSC Georgetown
+   - CMUNNY (Columbia, NYC)
+   - THIMUN Qatar
+   - NTUMUN (NTU Singapore)
+   - SMUN (NUS Singapore)
+   - BEIMUN (Beijing)
+   - AcadeMUN (Basel)
+   - MUN Vienna
+   - MUN Malta
 
-2. RESEARCH AGENT (8-Page Dossier)
-   - /research-agent - Comprehensive research generation
-   - Page 1: Executive Brief (what/why/UN position/current situation)
-   - Page 2: Country Position (policy/voting/treaties/alliances)
-   - Page 3: Agenda Deep Dive (issues/causes/disputes/terminology)
-   - Page 4: Other Countries (positions/allies/vulnerabilities)
-   - Page 5: UN Framework (resolutions/charters/agencies)
-   - Page 6: MUN Application (proposals/clauses/funding)
-   - Page 7: Attack Material (contradictions/statistics/weaknesses)
-   - Page 8: Sources (Tier 1/2/3 with credibility scores)
-   - "Prepare Me for Debate" button → sends to AI Assistant
+2. PERSONAL AI MEMORY → ASSISTANT CHAT
+   - AI reads your strengths/weaknesses/preferences during conversation
+   - getMemoryContextString() injected into system prompt
+   - /memory page for managing memories
 
-3. INSTAGRAM MUN DISCOVERY
-   - /api/mun/discover - Instagram Graph API integration
-   - Searches hashtags: mun, modelunitednations, harvardmun, mun2026, thimun
-   - Filters MUN-related profiles automatically
-   - Shows: name, bio, website, followers, profile picture
-   - Rate limit protection (200ms between calls)
-   - "Scan Instagram" button on Discover page
+3. SITUATION ROOM FIX
+   - Moved AI call from client component to server action
+   - Was calling generateText directly in browser (broken)
+   - Now uses generateSituationAnalysis() server action
 
-4. SITUATION ROOM
-   - /situation-room - Live committee context
-   - Breaking news, talking points, POIs, resolution implications
-   - Country-specific analysis during sessions
+4. TYPE ERROR FIXES
+   - assistant.ts: withFallback callback type fixed (LanguageModel instead of nullable)
+   - memory page: rewired to match ai-memory.ts API signatures
+   - scoring page: rewired to match mun-scoring.ts API signatures
 
-5. VOICE AGENT (STT/TTS)
-   - /api/stt - OpenAI Whisper speech-to-text
-   - /api/tts - ElevenLabs text-to-speech
-   - Server-side only (keys never exposed to browser)
-
-6. PERSONAL AI MEMORY
-   - UserAiMemory table in database
-   - Stores: strengths, weaknesses, preferences, style
-   - CRUD actions for memory management
-   - AI uses memory for personalized feedback
-
-7. MUN SCORING ENGINE
-   - Scores: speaking, research, diplomacy, leadership, documentation, collaboration
-   - 0-100 scoring with specific breakdowns
-   - Biggest weakness + strongest moment analysis
-   - Historical performance tracking
-
-8. AI FALLBACK SYSTEM
-   - Primary: Gemini → OpenAI → Anthropic → Groq
-   - Automatic failover if provider is down
-   - Configurable per environment
-
-9. CUSTOM MUN CURSOR
-   - 🔨 (gavel) for default cursor
-   - 🙏 (pointing) for interactive elements
-   - Applied site-wide via CSS
-
-10. PRIVACY PAGE
-    - /privacy - Full privacy policy
-    - Covers: data collection, AI usage, storage, rights, cookies
+5. UNUSED IMPORT CLEANUP
+   - Removed unused Mic import from nav.ts
 
 ========================================
-SIDEBAR CONSOLIDATION
+REMAINING ITEMS
 ========================================
 
-Old: 15 items (Dashboard, Analytics, Profile, Workspace, Resolution, Research, Glossary, Tips, Simulation, Coach, News, Social, Leaderboard, Settings, etc.)
-
-New: 7 items grouped
-
-MAIN:
-  - Dashboard
-  - AI Assistant
-  - Research Agent
-  - Discover MUNs
-  - Profile
-
-PREPARATION:
-  - Workspaces
-
-OPTIONAL:
-  - Settings
-
-========================================
-MARKETING CLEANED
-========================================
-
-REMOVED:
-  - Fake testimonials (Amara K., Miguel J., Sofia R., etc.)
-  - Fake stats ("50+ countries", "10k+ conferences", "42k simulations")
-  - Fake "Start free forever" claims
-  - Fake "Trusted by delegates from 50+ countries"
-
-REPLACED WITH:
-  - "Built for delegates. Powered by AI."
-  - "AI that understands how MUN actually works"
-  - Real capabilities: 8-page dossiers, 0-100 scoring, 3 source tiers
-  - Honest roadmap: Phase 1-3 live, Phase 4 building, Phase 5 next
-
-========================================
-ENVIRONMENT VARIABLES
-========================================
-
-AI PROVIDERS:
-  - GOOGLE_GENERATIVE_AI_API_KEY (primary)
-  - OPENAI_API_KEY (fallback + Whisper STT)
-  - ANTHROPIC_API_KEY (fallback)
-  - OPENROUTER_API_KEY (fallback)
-  - GROQ_API_KEY (fallback)
-  - DEEPSEEK_API_KEY (fallback)
-
-VOICE:
-  - ELEVENLABS_API_KEY (TTS)
-
-INSTAGRAM:
-  - IG_ACCESS_TOKEN (Graph API)
-  - IG_BUSINESS_ID (auto-detected)
-
-DATABASE:
-  - DATABASE_URL (Supabase PostgreSQL)
-  - SUPABASE_URL
-  - SUPABASE_SERVICE_ROLE_KEY
-  - NEXT_PUBLIC_SUPABASE_URL
-  - NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-AUTH:
-  - CLERK_SECRET_KEY
-  - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-
-SEARCH:
-  - GOOGLE_SEARCH_API_KEY
-  - GOOGLE_SEARCH_CX
-
-========================================
-DATABASE MODELS
-========================================
-
-User, MunProfile, Award, Certificate, Committee, CountryRepresented,
-SocialLink, Notification, Activity, UserSettings, Organizer, Venue,
-Conference, ConferenceCommittee, CountryMatrixEntry, AgendaItem,
-ConferenceSocialLink, Brochure, GalleryImage, ConferenceAward,
-ConferenceFaq, Secretariat, Review, Bookmark, Post, PostLike,
-PostComment, UserFollow, AchievementBadge, MarketplaceItem,
-Reminder, Workspace, Folder, Note, WorkspaceTask, TimelineEvent,
-WorkspaceAttachment, WorkspaceCommittee, PositionPaper, Resolution,
-AiDocument, AiChunk, AiMemory, UserAiMemory, CommitteeSimulation,
-SimulationDelegate, SimulationEvent, AiScore, VideoCoachSession
-
-Total: 50+ models
-
-========================================
-API ROUTES
-========================================
-
-/api/stt           - Speech-to-text (OpenAI Whisper)
-/api/tts           - Text-to-speech (ElevenLabs)
-/api/mun/discover  - Instagram MUN discovery
-/api/webhooks/*    - Clerk webhooks
-/api/upload/*      - File uploads (Supabase)
-
-========================================
-REMAINING ISSUES
-========================================
-
-- Some ESLint warnings (unused variables, non-critical)
+- IG_BUSINESS_ID needs to be set in Vercel for Instagram discovery
+- Google Search API keys still placeholder (Research Agent web search)
+- Some ESLint warnings (unused vars, non-critical)
 - Build warnings about <img> tags (recommend next/image)
-- Instagram IG_BUSINESS_ID needs to be set in .env
-- Google Search API keys need real values (currently placeholder)
-
-========================================
-NEXT STEPS
-========================================
-
-1. Set IG_BUSINESS_ID in Vercel environment variables
-2. Set real GOOGLE_SEARCH_API_KEY and GOOGLE_SEARCH_CX
-3. Seed more real conference data (currently 22+)
-4. Add real venue images to conference cards
-5. Implement conference scraping from Instagram bios
-6. Add email notifications for upcoming conferences
-7. Build mobile app (React Native)
-8. Add real-time committee chat during conferences
-
-========================================
-TESTS
-========================================
-
-- Total test files: 13
-- Total tests: 170
-- Status: ALL PASSING ✅
 
 ========================================
 BUILD COMMANDS
