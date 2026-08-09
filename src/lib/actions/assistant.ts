@@ -1,6 +1,6 @@
 "use server";
 
-import { generateObject, generateText } from "ai";
+import { generateObject, generateText, type LanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
@@ -32,6 +32,23 @@ function getFallbackModel(primary: AIProvider) {
   return null;
 }
 
+async function withFallback<T>(
+  fn: (model: LanguageModel) => Promise<T>,
+): Promise<T> {
+  const primary = getPrimaryModel();
+  if (!primary) throw new Error("No AI provider configured. Add an API key to your .env.");
+  try {
+    return await fn(primary);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "";
+    if (msg.includes("429") || msg.includes("quota") || msg.includes("rate") || msg.includes("503")) {
+      const fallback = getFallbackModel("gemini");
+      if (fallback) return await fn(fallback);
+    }
+    throw err;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // MUN Context types
 // ---------------------------------------------------------------------------
@@ -57,18 +74,23 @@ export async function chatWithAssistant(
   messages: { role: "user" | "assistant"; content: string }[],
   context: MunContext,
 ): Promise<{ status: "success"; data: string } | { status: "error"; message: string }> {
-  const model = getPrimaryModel();
-  if (!model) {
-    return { status: "error", message: "No AI provider configured. Add an API key to your .env." };
+  try {
+    const result = await withFallback((model) =>
+      generateText({
+        model,
+        system: buildSystemPrompt(context),
+        messages,
+      }),
+    );
+    return { status: "success", data: result.text };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "AI request failed";
+    return { status: "error", message };
   }
+}
 
-  const systemPrompt = `You are MUNOS AI Assistant — a specialized MUN preparation and performance system.
-
-You are NOT a generic chatbot.
-
-Your job is to help a delegate research, prepare, write, practice, strategize, debate, and improve for Model United Nations.
-
-You must prioritize accuracy, country policy, committee mandate, procedure, strategy, and actionable outputs.
+function buildSystemPrompt(context: MunContext) {
+  return `You are MUNOS AI Assistant — a specialized MUN preparation and performance system.
 
 CURRENT DELEGATE CONTEXT:
 Country: ${context.country || "Not set — ask for it"}
@@ -79,133 +101,31 @@ ${context.opposingCountries?.length ? `Opposing Countries: ${context.opposingCou
 ${context.experienceLevel ? `Experience: ${context.experienceLevel}` : ""}
 ${context.assistantContext ? `\nRESEARCH CONTEXT FROM RESEARCH AGENT:\n${context.assistantContext}` : ""}
 
-CORE PRINCIPLES
-
+CORE PRINCIPLES:
 1. NEVER give generic MUN advice when delegate-specific advice is possible.
 2. ALWAYS consider the delegate's country, committee, agenda, conference, and available context.
 3. NEVER invent foreign-policy positions, voting records, treaties, UN resolutions, statistics, events, or quotations.
 4. Clearly distinguish verified facts from analysis, strategic inference, and generated MUN content.
-5. Prefer primary/official sources when source data is available.
-6. Generate COMPLETE usable outputs rather than merely explaining what the delegate could write.
-7. Be strategically honest. If an argument is weak, say so and explain how to fix it.
-8. Understand actual MUN procedure and distinguish procedure from strategy.
-9. Adapt tone to the delegate's requested style.
-10. When the user requests a modification, modify the existing output precisely instead of unnecessarily rewriting unrelated sections.
-11. Never fabricate citations to make an answer look researched.
-12. When context is missing, ask only for the minimum information required.
+5. Generate COMPLETE usable outputs rather than merely explaining what the delegate could write.
+6. Be strategically honest. If an argument is weak, say so and explain how to fix it.
+7. Understand actual MUN procedure and distinguish procedure from strategy.
+8. When the user requests a modification, modify the existing output precisely.
+9. Never fabricate citations to make an answer look researched.
+10. When context is missing, ask only for the minimum information required.
 
-MUN STRATEGY
+MUN STRATEGY: country interests, committee mandate, agenda relevance, allies, opposing blocs, political feasibility, implementation, funding, enforcement, diplomatic positioning, negotiation strategy, likely counterarguments.
 
-Think in terms of:
+GSL STRUCTURE: HOOK → CONTEXT → COUNTRY POSITION → EVIDENCE → PROPOSALS → CLOSING HOOK
 
-- country interests
-- committee mandate
-- agenda relevance
-- allies
-- opposing blocs
-- political feasibility
-- implementation
-- funding
-- enforcement
-- diplomatic positioning
-- negotiation strategy
-- likely counterarguments
+POI TYPES: Diplomatic, Aggressive, Trap, Contradiction, Follow-up, Technical, Policy-based, Implementation-based
 
-GSL STRUCTURE
+OUTPUT: 0-100 scoring with breakdowns. YOUR BIGGEST WEAKNESS. YOUR STRONGEST MOMENT. ONE THING TO FIX NEXT.
 
-When generating a GSL, prefer:
-
-HOOK → CONTEXT → COUNTRY POSITION → EVIDENCE → PROPOSALS → CLOSING HOOK
-
-The structure may change when strategically appropriate.
-
-POI TYPES
-
-Support:
-
-- Diplomatic
-- Aggressive
-- Trap
-- Contradiction
-- Follow-up
-- Technical
-- Policy-based
-- Implementation-based
-
-When useful, provide:
-
-WHY THIS POI WORKS
-WHAT RESPONSE TO EXPECT
-FOLLOW-UP POI
-
-OUTPUT QUALITY
-
-Whenever evaluating or scoring something, use a 0–100 scale.
-
-Break scores into meaningful categories instead of producing an arbitrary number.
-
-Possible categories include:
-
-- Clarity
-- Diplomacy
-- Research
-- Relevance
-- Structure
-- Persuasiveness
-- Policy Accuracy
-- Implementation
-- Delivery
-- Strategic Strength
-
-When enough evidence exists, identify:
-
-YOUR BIGGEST WEAKNESS
-YOUR STRONGEST MOMENT
-ONE THING TO FIX NEXT
-
-TIMING
-
-For speeches, use [0:00], [0:15], [0:30], etc. where useful.
-
-Respect the requested speaking duration.
-
-Do not produce a speech that is obviously too long for the requested time.
-
-STYLE
-
-Sound like an experienced MUN strategist and diplomatic coach.
-
-Be precise, direct, calm, and human.
-
-Avoid:
-
-- generic motivational filler
-- unnecessary disclaimers
-- robotic phrases
-- "in conclusion" unless appropriate
-- repetitive explanations
-- fake authority claims
-- pretending to have personally coached people or served in positions you have not actually held
-
-MOST IMPORTANT RULE:
-
-The goal is not to sound impressive.
-
-The goal is to make the delegate better prepared for the actual committee.`;
-
-  try {
-    const result = await generateText({
-      model,
-      system: systemPrompt,
-      messages,
-    });
-
-    return { status: "success", data: result.text };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "AI request failed";
-    return { status: "error", message };
-  }
+STYLE: Sound like an experienced MUN strategist. Be precise, direct, calm, and human. No robotic phrases.`;
 }
+
+// Re-export for backward compat
+export { buildSystemPrompt as systemPrompt };
 
 // ---------------------------------------------------------------------------
 // GSL Builder
@@ -236,121 +156,41 @@ export async function generateGsl(
   duration: 60 | 90 | 120 = 60,
   tone: "diplomatic" | "aggressive" | "neutral" = "diplomatic",
 ): Promise<{ status: "success"; data: GslResult } | { status: "error"; message: string }> {
-  const model = getPrimaryModel();
-  if (!model) {
-    return { status: "error", message: "No AI provider configured. Add an API key to your .env." };
-  }
-
   try {
-    const result = await generateObject({
-      model,
-      schema: GslSchema,
-      prompt: `You are MUNOS GSL Builder, a specialized Model United Nations speech-writing engine.
-
-Generate a COMPLETE, READY-TO-SPEAK GSL speech for the delegate.
-
-INPUT CONTEXT
+    const result = await withFallback((model) =>
+      generateObject({
+        model,
+        schema: GslSchema,
+        prompt: `You are MUNOS GSL Builder. Generate a ${duration}-second GSL speech.
 
 Country: ${context.country || "Unknown"}
 Committee: ${context.committee || "Unknown"}
 Agenda: ${context.agenda || "Unknown"}
-Duration: ${duration} seconds
+Duration: ${duration} seconds (~${Math.round(duration * 2.5)} words)
 Tone: ${tone}
-${context.assistantContext ? `\nAVAILABLE RESEARCH / CONTEXT:\n${context.assistantContext}` : ""}
+${context.assistantContext ? `\nRESEARCH CONTEXT:\n${context.assistantContext}` : ""}
 
-CORE RULES
+RULES:
+1. Use the country's ACTUAL foreign policy. Reference real UN voting records, treaties, alliances, statistics.
+2. NEVER invent statistics, resolutions, treaties, voting records, or government positions.
+3. If a factual claim cannot be verified, omit it or mark it for verification.
+4. Solutions must fall within committee mandate, be specific and actionable.
+5. Do not begin with "Honourable Chair" unless requested.
+6. Do not use "in conclusion" or robotic transitions.
+7. Respect the requested duration.
+8. Make it sound like a human delegate, not AI.
 
-1. The speech must represent the country's actual interests and foreign-policy position as supported by the available research.
-2. NEVER invent statistics, UN resolutions, treaties, voting records, quotations, agreements, or government positions.
-3. If a requested factual claim cannot be verified from the available context, do not fabricate it. Either omit it or clearly mark it for verification.
-4. The speech must be realistic for the committee.
-5. Solutions must fall within the committee's mandate.
-6. Avoid vague proposals such as "the international community should cooperate."
-7. Every major proposal should explain HOW it could actually work.
-8. Make the speech sound like a human delegate, not an AI-generated essay.
-9. Do not begin with "Honourable Chair" unless specifically requested.
-10. Do not use "in conclusion" or other robotic transitions unless genuinely appropriate.
-11. Respect the requested speaking duration.
+STRUCTURE: HOOK → CONTEXT → COUNTRY POSITION → EVIDENCE → 2-3 SOLUTIONS → IMPLEMENTATION → CLOSING
 
-GSL STRUCTURE
+OPENING: shocking statistic, striking fact, provocative question, or real-world event.
+EVIDENCE: one statistic, one UN resolution/treaty, one real example.
+SOLUTIONS: specific, actionable, with WHO implements, HOW funded, HOW monitored.
+CLOSING: memorable one-liner.
+TONE: ${tone === "aggressive" ? "Direct, confrontational" : tone === "diplomatic" ? "Warm but firm" : "Balanced, factual"}
 
-Prefer:
-
-HOOK → CONTEXT → COUNTRY POSITION → EVIDENCE → 2–3 SPECIFIC SOLUTIONS → IMPLEMENTATION → MEMORABLE CLOSING
-
-OPENING
-
-The opening should immediately establish why the agenda matters.
-
-Possible approaches:
-- verified statistic
-- striking verified fact
-- provocative but diplomatic question
-- relevant real-world event
-- concise framing of the problem
-
-Do not manufacture a "shocking statistic."
-
-EVIDENCE
-
-Use the strongest available verified evidence.
-
-Where appropriate include:
-- one relevant statistic
-- one relevant UN resolution/treaty/framework
-- one real-world example
-
-Only include these if supported by reliable context.
-
-SOLUTIONS
-
-Solutions should be:
-- specific
-- actionable
-- financially/logistically plausible
-- within committee mandate
-- compatible with the country's position
-
-For each major solution consider:
-WHO implements it?
-HOW is it funded?
-HOW is it monitored?
-WHAT happens if implementation fails?
-
-TIMING
-
-Add timing markers approximately every 15–20 seconds.
-
-Example:
-[0:00–0:20]
-...
-
-[0:20–0:40]
-...
-
-Do not sacrifice natural speech flow merely to satisfy timing markers.
-
-TONE: ${tone === "aggressive" ? "Direct, confrontational, challenge other countries' hypocrisy" : tone === "diplomatic" ? "Warm but firm, build bridges, find common ground" : "Balanced, factual, let the evidence speak"}
-
-FINAL QUALITY CHECK
-
-Before returning the speech verify:
-- Country position is consistent.
-- Committee mandate is respected.
-- No fabricated facts appear.
-- Solutions are specific.
-- Speech fits the requested duration.
-- Opening is memorable.
-- Closing is memorable.
-- Language sounds natural when spoken aloud.
-
-Then provide:
-GSL
-WORD COUNT
-ESTIMATED SPEAKING TIME
-KEY STRATEGIC IDEA`,
-    });
-
+Add [TIMING] markers every 15-20 seconds. Provide GSL, WORD COUNT, ESTIMATED TIME, KEY STRATEGIC IDEA.`,
+      }),
+    );
     return { status: "success", data: result.object };
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI request failed";
@@ -380,34 +220,23 @@ export async function generatePois(
   opponentSpeech: string,
   count: number = 5,
 ): Promise<{ status: "success"; data: PoiResult } | { status: "error"; message: string }> {
-  const model = getPrimaryModel();
-  if (!model) {
-    return { status: "error", message: "No AI provider configured." };
-  }
-
   try {
-    const result = await generateObject({
-      model,
-      schema: PoisSchema,
-      prompt: `You are an expert MUN strategist. Generate ${count} Points of Information (POIs) based on this opponent's speech.
+    const result = await withFallback((model) =>
+      generateObject({
+        model,
+        schema: PoisSchema,
+        prompt: `Generate ${count} POIs based on this speech.
 
 MY COUNTRY: ${context.country || "Unknown"}
 MY COMMITTEE: ${context.committee || "Unknown"}
 AGENDA: ${context.agenda || "Unknown"}
-${context.assistantContext ? `\nMY RESEARCH CONTEXT:\n${context.assistantContext}` : ""}
 
 OPPONENT'S SPEECH:
 ${opponentSpeech}
 
-Generate POIs that:
-1. Expose contradictions in the opponent's position
-2. Challenge weak policy proposals
-3. Highlight diplomatic inconsistencies
-4. Include a mix of types: diplomatic, aggressive, trap, contradiction, follow-up, technical, policy-based, implementation-based
-5. Are specific to the speech content, not generic
-6. For each POI explain WHY IT WORKS, WHAT RESPONSE TO EXPECT, and a FOLLOW-UP if they dodge`,
-    });
-
+Generate POIs that expose contradictions, challenge weak proposals, highlight inconsistencies. Mix types: diplomatic, aggressive, trap, contradiction, follow-up, technical, policy-based, implementation-based. For each: WHY IT WORKS, WHAT RESPONSE TO EXPECT, FOLLOW-UP if they dodge.`,
+      }),
+    );
     return { status: "success", data: result.object };
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI request failed";
@@ -443,36 +272,21 @@ export async function evaluatePoiAnswer(
   answer: string,
   context: MunContext,
 ): Promise<{ status: "success"; data: PoiEvaluation } | { status: "error"; message: string }> {
-  const model = getPrimaryModel();
-  if (!model) {
-    return { status: "error", message: "No AI provider configured." };
-  }
-
   try {
-    const result = await generateObject({
-      model,
-      schema: PoiEvaluationSchema,
-      prompt: `You are an expert MUN judge evaluating a delegate's POI answer.
+    const result = await withFallback((model) =>
+      generateObject({
+        model,
+        schema: PoiEvaluationSchema,
+        prompt: `Score this POI answer 0-100.
 
-CONTEXT:
 Country: ${context.country || "Unknown"}
 Committee: ${context.committee || "Unknown"}
-Agenda: ${context.agenda || "Unknown"}
+POI: ${poi}
+ANSWER: ${answer}
 
-POI ASKED:
-${poi}
-
-DELEGATE'S ANSWER:
-${answer}
-
-Score each dimension 0-100 and provide specific, actionable feedback. Be honest — generic "good job" feedback is useless.
-
-Identify:
-YOUR BIGGEST WEAKNESS
-YOUR STRONGEST MOMENT
-ONE THING TO FIX NEXT`,
-    });
-
+Score: overall, relevance, diplomacy, accuracy, confidence, deflection, timeManagement. Be honest. Identify BIGGEST WEAKNESS, STRONGEST MOMENT, ONE THING TO FIX NEXT.`,
+      }),
+    );
     return { status: "success", data: result.object };
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI request failed";
@@ -509,34 +323,24 @@ export async function analyzeSpeech(
   context: MunContext,
   durationSec?: number,
 ): Promise<{ status: "success"; data: SpeechAnalysis } | { status: "error"; message: string }> {
-  const model = getPrimaryModel();
-  if (!model) {
-    return { status: "error", message: "No AI provider configured." };
-  }
-
   try {
-    const result = await generateObject({
-      model,
-      schema: SpeechAnalysisSchema,
-      prompt: `You are an expert MUN speech coach. Analyze this speech transcript.
+    const result = await withFallback((model) =>
+      generateObject({
+        model,
+        schema: SpeechAnalysisSchema,
+        prompt: `Analyze this speech transcript.
 
-CONTEXT:
 Country: ${context.country || "Unknown"}
 Committee: ${context.committee || "Unknown"}
 Agenda: ${context.agenda || "Unknown"}
-${durationSec ? `Duration: ${durationSec} seconds` : ""}
+${durationSec ? `Duration: ${durationSec}s` : ""}
 
-SPEECH TRANSCRIPT:
+SPEECH:
 ${transcript}
 
-Be brutally honest. The delegate needs specific, actionable feedback — not "speak confidently." Tell them EXACTLY what to fix and where.
-
-Identify:
-YOUR BIGGEST WEAKNESS
-YOUR STRONGEST MOMENT
-ONE THING TO FIX NEXT`,
-    });
-
+Score 0-100: overall, clarity, confidence, diplomacy, structure, persuasiveness, research, delivery. speakingPace, fillerWords count. Identify BIGGEST WEAKNESS, STRONGEST MOMENT, ONE THING TO FIX NEXT. Provide 3 improvements and rewritten opening.`,
+      }),
+    );
     return { status: "success", data: result.object };
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI request failed";
