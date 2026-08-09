@@ -1061,3 +1061,27 @@ model VideoCoachSession {
   @@index([userId])
   @@index([userId, createdAt])
 }
+
+model PendingConference {
+  id          String   @id @default(cuid())
+  name        String
+  organizer   String
+  website     String?
+  country     String
+  city        String?
+  state       String?
+  startDate   DateTime?
+  endDate     DateTime?
+  fee         Float?
+  currency    String?  @default("USD")
+  description String?  @db.Text
+  committees  String[]
+  email       String?
+  status      String   @default("pending") // pending, approved, rejected
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}

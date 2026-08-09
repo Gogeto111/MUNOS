@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getDb } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
@@ -12,29 +13,30 @@ export async function POST(request: Request) {
       );
     }
 
-    const submission = {
-      name,
-      organizer,
-      website: website || null,
-      country,
-      city: city || null,
-      startDate: startDate || null,
-      endDate: endDate || null,
-      fee: fee || null,
-      description: description || null,
-      committees: committees ? committees.split(",").map((c: string) => c.trim()) : [],
-      email: email || null,
-      submittedAt: new Date().toISOString(),
-      status: "pending",
-    };
+    const committeeList = committees
+      ? committees.split(",").map((c: string) => c.trim()).filter(Boolean)
+      : [];
 
-    // TODO: Store in database (PendingConference table) or send to admin email
-    // For now, log to console
-    console.log("New conference submission:", JSON.stringify(submission, null, 2));
+    const pending = await getDb().pendingConference.create({
+      data: {
+        name,
+        organizer,
+        website: website || null,
+        country,
+        city: city || null,
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
+        fee: fee ? parseFloat(fee) : null,
+        description: description || null,
+        committees: committeeList,
+        email: email || null,
+      },
+    });
 
     return NextResponse.json({
       success: true,
       message: "Conference submitted successfully. We'll review it and add it to the database.",
+      id: pending.id,
     });
   } catch {
     return NextResponse.json(

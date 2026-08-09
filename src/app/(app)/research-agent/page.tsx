@@ -11,7 +11,7 @@ export default function ResearchAgentPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Research Agent</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Generate comprehensive 8-page research dossiers with country positions, UN frameworks, and sourced claims.
+          Generate comprehensive 16-section research dossiers with country positions, UN frameworks, and sourced claims.
         </p>
       </div>
       <ResearchAgent />
