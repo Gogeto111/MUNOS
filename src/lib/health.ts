@@ -22,7 +22,7 @@ let lastCheck = 0;
 const CACHE_TTL_MS = 30_000; // Re-check every 30 seconds
 
 /**
- * Startup health validation — checks DB, AI, and env configuration.
+ * Startup health validation ï¿½ï¿½ï¿½ ï¿½?" checks DB, AI, and env configuration.
  * Caches the result for 30s to avoid hammering the DB on every request.
  */
 export async function getHealthReport(): Promise<HealthReport> {
@@ -58,7 +58,7 @@ export async function getHealthReport(): Promise<HealthReport> {
     if (!isAiConfigured) {
       checks.ai = { status: "degraded", message: "API key not configured" };
     } else {
-      // Just verify the key exists — don't make a real API call on health check
+      // Just verify the key exists ï¿½ï¿½ï¿½ ï¿½?" don't make a real API call on health check
       checks.ai = { status: "ok", latencyMs: Date.now() - aiStart };
     }
   } catch {

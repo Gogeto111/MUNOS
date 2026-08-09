@@ -1,4 +1,3 @@
-import "server-only";
 import { z } from "zod";
 
 const serverSchema = z.object({
@@ -8,6 +7,8 @@ const serverSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional().default(""),
   SUPABASE_URL: z.string().optional().default(""),
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional().default(""),
+  GOOGLE_SEARCH_API_KEY: z.string().optional().default(""),
+  GOOGLE_SEARCH_CX: z.string().optional().default(""),
   AI_MODEL: z.string().optional().default("gemini-2.5-flash"),
   NEXT_PUBLIC_APP_URL: z.string().optional().default("http://localhost:3000"),
   NEXT_PUBLIC_SUPABASE_URL: z.string().optional().default(""),
@@ -21,6 +22,8 @@ const devSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional().default(""),
   SUPABASE_URL: z.string().optional().default(""),
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional().default(""),
+  GOOGLE_SEARCH_API_KEY: z.string().optional().default(""),
+  GOOGLE_SEARCH_CX: z.string().optional().default(""),
   AI_MODEL: z.string().optional().default("gemini-2.5-flash"),
   NEXT_PUBLIC_APP_URL: z.string().optional().default("http://localhost:3000"),
   NEXT_PUBLIC_SUPABASE_URL: z.string().optional().default(""),
@@ -34,9 +37,9 @@ const result = schema.safeParse(process.env);
 
 if (!result.success) {
   const errors = result.error.flatten().fieldErrors;
-  const msg = `[env] Invalid environment variables:\n${Object.entries(errors).map(([k, v]) => `  ${k}: ${v?.join(", ")}`).join("\n")}`;
+  const msg = "[env] Invalid environment variables: " + Object.keys(errors).join(", ");
   if (isProd) {
-    // In production, fail hard — missing env vars cause silent data leaks.
+    // In production, fail hard - missing env vars cause silent data leaks.
     console.error(msg);
     throw new Error(msg);
   } else {
@@ -44,10 +47,6 @@ if (!result.success) {
   }
 }
 
-/**
- * Server-only environment. Importing this module from a Client Component
- * throws at build time — a hard guarantee that secrets never leak.
- */
 export const env = result.success
   ? result.data
   : ({} as z.infer<typeof serverSchema>);
@@ -58,11 +57,16 @@ export const isServerConfigured = Boolean(
 
 export const isAiConfigured = Boolean(env.GOOGLE_GENERATIVE_AI_API_KEY);
 
+export const isWebSearchConfigured = Boolean(
+  env.GOOGLE_SEARCH_API_KEY &&
+  env.GOOGLE_SEARCH_CX,
+);
+
 export const isStorageConfigured = Boolean(
   env.SUPABASE_SERVICE_ROLE_KEY && env.SUPABASE_URL,
 );
 
-/** Production-ready checks — all critical services must be configured. */
+/** Production-ready checks - all critical services must be configured. */
 export function validateProductionEnv() {
   const missing: string[] = [];
   if (!env.DATABASE_URL) missing.push("DATABASE_URL");

@@ -4,7 +4,8 @@ import { generateObject } from "ai";
 import { google } from "@ai-sdk/google";
 import { z } from "zod";
 import { ok, toActionError, type ActionState } from "@/lib/actions";
-import { isAiConfigured } from "@/lib/env";
+import { isAiConfigured, isWebSearchConfigured } from "@/lib/env";
+import { performWebSearch } from "../web-search";
 
 const TopicBriefingSchema = z.object({
   executiveSummary: z.string().describe("A concise 1-2 paragraph executive summary of the topic"),
@@ -50,6 +51,28 @@ export async function generateTopicBriefing(
   }
 
   try {
+    // Perform web search to gather recent information
+    const searchQuery = `${topic} ${committee} United Nations recent developments 2024 2025`;
+    let searchResults: string = "";
+    
+    if (isWebSearchConfigured) {
+      const searchResult = await performWebSearch(searchQuery, 5);
+      if (searchResult.status === "success") {
+        const formattedResults = searchResult.data
+          .map((result, index) => `
+  [${index + 1}] Title: ${result.title}
+      URL: ${result.link}
+      Summary: ${result.snippet}`)
+          .join("\n");
+        
+        searchResults = `
+RECENT WEB SEARCH RESULTS:
+${formattedResults}
+
+Please incorporate information from these recent sources into your analysis where relevant.`;
+      }
+    }
+
     const result = await generateObject({
       model: google("gemini-2.5-flash"),
       schema: TopicBriefingSchema,
@@ -63,7 +86,7 @@ The topic briefing should include:
 5. Past Resolutions: Relevant past UN resolutions on this topic, including symbols, titles, years, and relevance.
 6. Discussion Questions: 3-5 questions to guide debate and discussion.
 
-Write in a clear, informative style appropriate for Model UN preparation. Focus on providing a balanced, factual overview that helps delegates understand the topic and prepare for negotiations.`,
+Write in a clear, informative style appropriate for Model UN preparation. Focus on providing a balanced, factual overview that helps delegates understand the topic and prepare for negotiations.${searchResults}`, 
     });
 
     return { status: "success", data: result.object };

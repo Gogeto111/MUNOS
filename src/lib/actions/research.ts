@@ -3,7 +3,8 @@
 import { generateObject } from "ai";
 import { google } from "@ai-sdk/google";
 import { z } from "zod";
-import { isAiConfigured } from "@/lib/env";
+import { isAiConfigured, isWebSearchConfigured } from "@/lib/env";
+import { performWebSearch, type GoogleSearchResult } from "./web-search";
 
 const ResearchBriefSchema = z.object({
   overview: z.string().describe("A concise 2-3 paragraph overview of the topic"),
@@ -48,32 +49,39 @@ export async function generateResearchBrief(
   }
 
   try {
+    // Perform web search to gather recent information
+    const searchQuery = `${topic} ${country} ${committee} United Nations recent developments 2024 2025`;
+    let searchResults: string = "";
+    
+    if (isWebSearchConfigured) {
+      const searchResult = await performWebSearch(searchQuery, 5);
+      if (searchResult.status === "success") {
+        const formattedResults = searchResult.data
+          .map((result: GoogleSearchResult, index: number) => `
+  [${index + 1}] Title: ${result.title}
+      URL: ${result.link}
+      Summary: ${result.snippet}`)
+          .join("\n");
+        
+        searchResults = `
+RECENT WEB SEARCH RESULTS:
+${formattedResults}
+
+Please incorporate information from these recent sources into your analysis where relevant.`;
+      }
+    }
+
     const result = await generateObject({
       model: google("gemini-2.5-flash"),
       schema: ResearchBriefSchema,
-      prompt: `You are an expert MUN (Model United Nations) research assistant. Generate a comprehensive research brief for a delegate representing ${country} in the ${committee} committee on the following topic:
-
-TOPIC: ${topic}
-
-Provide a detailed, well-researched brief including:
-1. An overview of the topic with historical context and current developments
-2. Key arguments in favour of the country's likely position
-3. Key arguments against opposing positions
-4. Relevant UN resolutions that are applicable
-5. Concise talking points suitable for debate speeches
-6. A bibliography of key sources
-
-Write in a formal, analytical style appropriate for a Model United Nations context. Be specific about ${country}'s known positions on this topic where possible. If the country's exact position is uncertain, note this and provide the most likely stance based on historical voting records and regional alignments.`,
+      prompt: `You are an expert MUN research assistant. Generate a research brief for ${country} in the ${committee} committee on ${topic}. Include overview, arguments for/against, relevant resolutions, talking points, and bibliography.${searchResults}`
     });
 
     return { status: "success", data: result.object };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Something went wrong.";
     if (message.includes("API key") || message.includes("quota") || message.includes("rate")) {
-      return {
-        status: "error",
-        message: "AI service is temporarily unavailable. Please try again later.",
-      };
+      return { status: "error", message: "AI service is temporarily unavailable. Please try again later." };
     }
     return { status: "error", message };
   }
