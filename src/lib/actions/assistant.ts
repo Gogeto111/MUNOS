@@ -6,6 +6,7 @@ import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import { env, isAiConfigured } from "@/lib/env";
+import { getMemoryContextString } from "@/lib/actions/ai-memory";
 
 // ---------------------------------------------------------------------------
 // AI Provider with fallback
@@ -75,10 +76,11 @@ export async function chatWithAssistant(
   context: MunContext,
 ): Promise<{ status: "success"; data: string } | { status: "error"; message: string }> {
   try {
+    const memoryContext = await getMemoryContextString();
     const result = await withFallback((model) =>
       generateText({
         model,
-        system: buildSystemPrompt(context),
+        system: buildSystemPrompt(context, memoryContext || undefined),
         messages,
       }),
     );
@@ -89,7 +91,7 @@ export async function chatWithAssistant(
   }
 }
 
-function buildSystemPrompt(context: MunContext) {
+function buildSystemPrompt(context: MunContext, memoryContext?: string) {
   return `You are MUNOS AI Assistant — a specialized MUN preparation and performance system.
 
 CURRENT DELEGATE CONTEXT:
@@ -100,6 +102,7 @@ Conference: ${context.conference || "Not set"}
 ${context.opposingCountries?.length ? `Opposing Countries: ${context.opposingCountries.join(", ")}` : ""}
 ${context.experienceLevel ? `Experience: ${context.experienceLevel}` : ""}
 ${context.assistantContext ? `\nRESEARCH CONTEXT FROM RESEARCH AGENT:\n${context.assistantContext}` : ""}
+${memoryContext || ""}
 
 CORE PRINCIPLES:
 1. NEVER give generic MUN advice when delegate-specific advice is possible.
