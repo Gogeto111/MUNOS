@@ -1,71 +1,16 @@
 "use server";
 
 import { generateObject, generateText, type LanguageModel } from "ai";
-import { google } from "@ai-sdk/google";
-import { createOpenAI } from "@ai-sdk/openai";
-import { anthropic } from "@ai-sdk/anthropic";
-import { createGroq } from "@ai-sdk/groq";
 import { z } from "zod";
-import { env, isAiConfigured, isGroqConfigured, isOpenAiConfigured, isAnthropicConfigured, isNvidiaConfigured } from "@/lib/env";
+import { getBestModel, getBestObjectModel } from "@/lib/ai-model";
 import { getMemoryContextString } from "@/lib/actions/ai-memory";
-
-// ---------------------------------------------------------------------------
-// AI Provider with fallback
-// Groq (fastest, free) → NVIDIA NIM (free) → Gemini → OpenAI → Anthropic
-// ---------------------------------------------------------------------------
-
-const groq = createGroq({ apiKey: env.GROQ_API_KEY });
-
-// NVIDIA NIM: OpenAI-compatible at https://integrate.api.nvidia.com/v1
-function nvidiaModel() {
-  return createOpenAI({
-    baseURL: "https://integrate.api.nvidia.com/v1",
-    apiKey: env.NVIDIA_API_KEY,
-  })("nvidia/llama-3.3-nemotron-super-49b-v1");
-}
-
-type AIProvider = "groq" | "nvidia" | "gemini" | "openai" | "anthropic";
-
-function getPrimaryModel() {
-  if (isGroqConfigured) return groq("llama-3.3-70b-versatile");
-  if (isNvidiaConfigured) return nvidiaModel();
-  if (isAiConfigured) return google(env.AI_MODEL || "gemini-2.5-flash");
-  if (isOpenAiConfigured) return createOpenAI({ apiKey: env.OPENAI_API_KEY })("gpt-4o");
-  if (isAnthropicConfigured) return anthropic("claude-sonnet-4-20250514");
-  return null;
-}
-
-function getFallbackModel(primary: AIProvider): LanguageModel | null {
-  const fallbacks: { key: AIProvider; model: () => LanguageModel }[] = [
-    { key: "groq", model: () => groq("llama-3.3-70b-versatile") },
-    { key: "nvidia", model: () => nvidiaModel() },
-    { key: "gemini", model: () => google(env.AI_MODEL || "gemini-2.5-flash") },
-    { key: "openai", model: () => createOpenAI({ apiKey: env.OPENAI_API_KEY })("gpt-4o") },
-    { key: "anthropic", model: () => anthropic("claude-sonnet-4-20250514") },
-  ];
-  for (const fb of fallbacks) {
-    if (fb.key !== primary) {
-      try { return fb.model(); } catch { continue; }
-    }
-  }
-  return null;
-}
 
 async function withFallback<T>(
   fn: (model: LanguageModel) => Promise<T>,
 ): Promise<T> {
-  const primary = getPrimaryModel();
-  if (!primary) throw new Error("No AI provider configured. Add GROQ_API_KEY or NVIDIA_API_KEY to your .env (both free, no credit card).");
-  try {
-    return await fn(primary);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "";
-    if (msg.includes("429") || msg.includes("quota") || msg.includes("rate") || msg.includes("503")) {
-      const fallback = getFallbackModel("groq");
-      if (fallback) return await fn(fallback);
-    }
-    throw err;
-  }
+  const model = getBestModel();
+  if (!model) throw new Error("No AI provider configured. Add GROQ_API_KEY or NVIDIA_API_KEY to your .env (both free, no credit card).");
+  return fn(model);
 }
 
 // ---------------------------------------------------------------------------
@@ -218,11 +163,10 @@ export async function generateGsl(
   tone: "diplomatic" | "aggressive" | "neutral" = "diplomatic",
 ): Promise<{ status: "success"; data: GslResult } | { status: "error"; message: string }> {
   try {
-    const result = await withFallback((model) =>
-      generateObject({
-        model,
-        schema: GslSchema,
-        prompt: `You are MUNOS GSL Builder. Generate a ${duration}-second GSL speech.
+    const result = await generateObject({
+      model: getBestObjectModel(),
+      schema: GslSchema,
+      prompt: `You are MUNOS GSL Builder. Generate a ${duration}-second GSL speech.
 
 Country: ${context.country || "Unknown"}
 Committee: ${context.committee || "Unknown"}
@@ -250,8 +194,7 @@ CLOSING: memorable one-liner.
 TONE: ${tone === "aggressive" ? "Direct, confrontational" : tone === "diplomatic" ? "Warm but firm" : "Balanced, factual"}
 
 Add [TIMING] markers every 15-20 seconds. Provide GSL, WORD COUNT, ESTIMATED TIME, KEY STRATEGIC IDEA.`,
-      }),
-    );
+    });
     return { status: "success", data: result.object };
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI request failed";
@@ -282,11 +225,10 @@ export async function generatePois(
   count: number = 5,
 ): Promise<{ status: "success"; data: PoiResult } | { status: "error"; message: string }> {
   try {
-    const result = await withFallback((model) =>
-      generateObject({
-        model,
-        schema: PoisSchema,
-        prompt: `Generate ${count} POIs based on this speech.
+    const result = await generateObject({
+      model: getBestObjectModel(),
+      schema: PoisSchema,
+      prompt: `Generate ${count} POIs based on this speech.
 
 MY COUNTRY: ${context.country || "Unknown"}
 MY COMMITTEE: ${context.committee || "Unknown"}
@@ -296,8 +238,7 @@ OPPONENT'S SPEECH:
 ${opponentSpeech}
 
 Generate POIs that expose contradictions, challenge weak proposals, highlight inconsistencies. Mix types: diplomatic, aggressive, trap, contradiction, follow-up, technical, policy-based, implementation-based. For each: WHY IT WORKS, WHAT RESPONSE TO EXPECT, FOLLOW-UP if they dodge.`,
-      }),
-    );
+    });
     return { status: "success", data: result.object };
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI request failed";
@@ -334,11 +275,10 @@ export async function evaluatePoiAnswer(
   context: MunContext,
 ): Promise<{ status: "success"; data: PoiEvaluation } | { status: "error"; message: string }> {
   try {
-    const result = await withFallback((model) =>
-      generateObject({
-        model,
-        schema: PoiEvaluationSchema,
-        prompt: `Score this POI answer 0-100.
+    const result = await generateObject({
+      model: getBestObjectModel(),
+      schema: PoiEvaluationSchema,
+      prompt: `Score this POI answer 0-100.
 
 Country: ${context.country || "Unknown"}
 Committee: ${context.committee || "Unknown"}
@@ -346,8 +286,7 @@ POI: ${poi}
 ANSWER: ${answer}
 
 Score: overall, relevance, diplomacy, accuracy, confidence, deflection, timeManagement. Be honest. Identify BIGGEST WEAKNESS, STRONGEST MOMENT, ONE THING TO FIX NEXT.`,
-      }),
-    );
+    });
     return { status: "success", data: result.object };
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI request failed";
@@ -385,11 +324,10 @@ export async function analyzeSpeech(
   durationSec?: number,
 ): Promise<{ status: "success"; data: SpeechAnalysis } | { status: "error"; message: string }> {
   try {
-    const result = await withFallback((model) =>
-      generateObject({
-        model,
-        schema: SpeechAnalysisSchema,
-        prompt: `Analyze this speech transcript.
+    const result = await generateObject({
+      model: getBestObjectModel(),
+      schema: SpeechAnalysisSchema,
+      prompt: `Analyze this speech transcript.
 
 Country: ${context.country || "Unknown"}
 Committee: ${context.committee || "Unknown"}
@@ -400,8 +338,7 @@ SPEECH:
 ${transcript}
 
 Score 0-100: overall, clarity, confidence, diplomacy, structure, persuasiveness, research, delivery. speakingPace, fillerWords count. Identify BIGGEST WEAKNESS, STRONGEST MOMENT, ONE THING TO FIX NEXT. Provide 3 improvements and rewritten opening.`,
-      }),
-    );
+    });
     return { status: "success", data: result.object };
   } catch (error) {
     const message = error instanceof Error ? error.message : "AI request failed";

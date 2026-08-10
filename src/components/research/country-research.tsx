@@ -16,7 +16,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { CountrySearch } from "./country-search";
 import { CountryFlag } from "@/components/shared/country-flag";
 import { generateCountryProfile } from "@/lib/actions/country-research";
@@ -141,8 +140,8 @@ export function CountryResearch() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="max-h-[600px]">
-              <div className="space-y-6 pr-4">
+            <div className="max-h-[600px] overflow-y-auto pr-2">
+              <div className="space-y-6">
                 <Section title="Quick Facts" icon={Flag}>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     <Field label="Capital">{restData?.capital?.[0] || profile.capital}</Field>
@@ -219,7 +218,7 @@ export function CountryResearch() {
                   </ul>
                 </Section>
               </div>
-            </ScrollArea>
+            </div>
 
             <div className="mt-6 flex flex-wrap gap-2 border-t pt-4">
               <Button size="sm" variant="outline">
