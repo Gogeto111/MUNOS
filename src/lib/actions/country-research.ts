@@ -82,7 +82,6 @@ function formatLanguages(languages?: Record<string, string>): string {
 }
 
 function buildRestContext(data: RestCountryData): string {
-  const flag = data.flags?.alt || data.name.common;
   return `
 REAL COUNTRY DATA FROM REST COUNTRIES API:
 - Official name: ${data.name.official}

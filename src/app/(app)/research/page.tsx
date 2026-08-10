@@ -36,6 +36,7 @@ import {
   generateTopicBriefing,
   type TopicBriefing,
 } from "@/lib/actions/research/topic-briefing";
+import { GitHubResources } from "@/components/shared/github-resources";
 
 export default function ResearchPage() {
   const [topic, setTopic] = useState("");
@@ -106,7 +107,7 @@ export default function ResearchPage() {
 
       <div className="border rounded-xl p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="research" className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-muted">
               Research Brief
             </TabsTrigger>
@@ -115,6 +116,9 @@ export default function ResearchPage() {
             </TabsTrigger>
             <TabsTrigger value="topic" className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-muted">
               Topic Briefing
+            </TabsTrigger>
+            <TabsTrigger value="resources" className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-muted">
+              Resources
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -446,10 +450,15 @@ export default function ResearchPage() {
         </div>
       )}
 
+      {activeTab === "resources" && (
+        <GitHubResources />
+      )}
+
       {!(
         (activeTab === "research" && researchBrief) ||
         (activeTab === "position" && positionPaper) ||
-        (activeTab === "topic" && topicBriefing)
+        (activeTab === "topic" && topicBriefing) ||
+        activeTab === "resources"
       ) && !isPending && !error && (
         <Card className="flex min-h-64 flex-col items-center justify-center border-dashed text-center">
           <CardHeader className="items-center">

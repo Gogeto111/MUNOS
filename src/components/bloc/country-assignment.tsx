@@ -3,9 +3,8 @@
 import { useState, useMemo } from "react";
 import { Grid3x3, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { getCountryFlag } from "@/lib/country-flags";
+import { CountryFlag } from "@/components/shared/country-flag";
 import type { Bloc, CountryAssignment } from "@/lib/bloc-types";
 import { setCountryAssignment } from "@/lib/bloc-store";
 
@@ -112,7 +111,6 @@ export function CountryAssignmentView({
         {filtered.map((country) => {
           const blocId = assignmentMap[country];
           const color = getBlocColor(blocId);
-          const flag = getCountryFlag(country);
           return (
             <button
               key={country}
@@ -129,7 +127,7 @@ export function CountryAssignmentView({
                   : undefined
               }
             >
-              <span className="text-base">{flag}</span>
+              <CountryFlag country={country} size="md" />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{country}</p>
                 {blocId && (

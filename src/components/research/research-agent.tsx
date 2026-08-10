@@ -246,9 +246,6 @@ export function ResearchAgent() {
     return lines.join("\n");
   };
 
-  const dossierFilename = () =>
-    `dossier-${country.toLowerCase().replace(/\s+/g, "-")}-${committee.toLowerCase().replace(/\s+/g, "-")}`;
-
   return (
     <div className="space-y-6">
       <Card>

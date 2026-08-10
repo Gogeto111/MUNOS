@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CountrySearch } from "./country-search";
+import { CountryFlag } from "@/components/shared/country-flag";
 import { generateCountryProfile } from "@/lib/actions/country-research";
 import type { CountryProfile } from "@/lib/actions/country-research";
 import { fetchRestCountryData } from "@/lib/actions/rest-countries";
@@ -127,15 +128,7 @@ export function CountryResearch() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
-              {restData?.flags?.png ? (
-                <img
-                  src={restData.flags.png}
-                  alt={`Flag of ${profile.name}`}
-                  className="size-10 rounded-sm object-cover shadow-sm"
-                />
-              ) : (
-                <span className="text-4xl">{profile.flag}</span>
-              )}
+              <CountryFlag country={profile.name} size="xl" />
               <div>
                 <div className="text-lg font-bold">{profile.name}</div>
                 <div className="text-xs font-normal text-muted-foreground">

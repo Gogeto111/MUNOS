@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { getCountryFlag } from "@/lib/country-flags";
+import { CountryFlag } from "@/components/shared/country-flag";
 import {
   Mic,
   Clock,
@@ -94,7 +94,6 @@ export function DelegateCard({
   onRemove,
 }: DelegateCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const flag = getCountryFlag(delegate.country);
 
   if (compact) {
     return (
@@ -104,7 +103,7 @@ export function DelegateCard({
           getStatusColor(delegate.queueStatus)
         )}
       >
-        <span className="text-base">{flag}</span>
+        <CountryFlag country={delegate.country} size="md" />
         <span className="flex-1 truncate text-sm font-medium">
           {delegate.country}
         </span>
@@ -136,7 +135,7 @@ export function DelegateCard({
     >
       <CardContent className="p-3">
         <div className="flex items-start gap-3">
-          <span className="text-2xl">{flag}</span>
+          <CountryFlag country={delegate.country} size="lg" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold truncate">

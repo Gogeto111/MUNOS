@@ -18,6 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CountdownTimer } from "@/components/conference/countdown-timer";
 import { ConferenceVerification } from "@/components/conference/verified-badge";
+import { LocationMap } from "@/components/shared/location-map";
 import {
   conferenceDateRange,
   deriveConference,
@@ -39,16 +40,6 @@ function initials(name: string): string {
     .join("");
 }
 
-function mapHref(venue: ConferenceFull["venue"]): string | null {
-  if (!venue) return null;
-  if (venue.mapsUrl) return venue.mapsUrl;
-  if (venue.latitude !== null && venue.latitude !== undefined && venue.longitude !== null && venue.longitude !== undefined) {
-    return `https://www.google.com/maps?q=${venue.latitude},${venue.longitude}`;
-  }
-  const q = [venue.name, venue.city, venue.state, venue.country].filter(Boolean).join(" ");
-  return q ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` : null;
-}
-
 export function ConferenceSidebar({
   conference,
   now = new Date(),
@@ -57,7 +48,6 @@ export function ConferenceSidebar({
   now?: Date;
 }) {
   const derived = deriveConference(conference, now);
-  const mapsLink = mapHref(conference.venue);
 
   return (
     <div className="space-y-5">
@@ -199,26 +189,18 @@ export function ConferenceSidebar({
             conference.venue.latitude !== undefined &&
             conference.venue.longitude !== null &&
             conference.venue.longitude !== undefined ? (
-              <iframe
-                title="Conference venue map"
-                src={`https://maps.google.com/maps?q=${conference.venue.latitude},${conference.venue.longitude}&z=13&output=embed`}
-                className="mt-4 h-40 w-full rounded-xl border border-border/60"
-                loading="lazy"
+              <LocationMap
+                lat={conference.venue.latitude}
+                lon={conference.venue.longitude}
+                title={conference.venue.name ?? "Conference venue"}
+                className="mt-4"
               />
-            ) : null}
-            {mapsLink ? (
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="mt-4 w-full gap-1.5 rounded-full"
-              >
-                <a href={mapsLink} target="_blank" rel="noopener noreferrer">
-                  Open in Google Maps
-                  <ExternalLink className="size-3.5" />
-                </a>
-              </Button>
-            ) : null}
+            ) : (
+              <div className="mt-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-muted-foreground/25 bg-muted/30 p-6 text-center">
+                <MapPin className="mb-2 size-6 text-muted-foreground/50" />
+                <p className="text-sm text-muted-foreground">Map not available</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       ) : null}
