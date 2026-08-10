@@ -1,7 +1,7 @@
 "use server";
 
 import { generateObject } from "ai";
-import { getBestModel } from "@/lib/ai-model";
+import { getBestObjectModel } from "@/lib/ai-model";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
@@ -83,7 +83,7 @@ export async function generateDebateSummary(
       `Event log:\n${eventsSummary || "(no events recorded)"}`;
 
     const result = await generateObject({
-      model: getBestModel(),
+      model: getBestObjectModel(),
       schema: DebateSummarySchema,
       prompt,
     });

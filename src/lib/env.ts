@@ -27,6 +27,12 @@ const serverSchema = z.object({
   GOOGLE_SEARCH_API_KEY: z.string().optional().default(""),
   GOOGLE_SEARCH_CX: z.string().optional().default(""),
 
+  // Unsplash (real conference photos)
+  UNSPLASH_ACCESS_KEY: z.string().optional().default(""),
+
+  // REST Countries (country data API)
+  REST_COUNTRIES_API_KEY: z.string().optional().default(""),
+
   AI_MODEL: z.string().optional().default("gemini-2.5-flash"),
   NEXT_PUBLIC_APP_URL: z.string().optional().default("http://localhost:3000"),
   NEXT_PUBLIC_SUPABASE_URL: z.string().optional().default(""),
@@ -51,6 +57,8 @@ const devSchema = z.object({
   IG_BUSINESS_ID: z.string().optional().default(""),
   GOOGLE_SEARCH_API_KEY: z.string().optional().default(""),
   GOOGLE_SEARCH_CX: z.string().optional().default(""),
+  UNSPLASH_ACCESS_KEY: z.string().optional().default(""),
+  REST_COUNTRIES_API_KEY: z.string().optional().default(""),
   AI_MODEL: z.string().optional().default("gemini-2.5-flash"),
   NEXT_PUBLIC_APP_URL: z.string().optional().default("http://localhost:3000"),
   NEXT_PUBLIC_SUPABASE_URL: z.string().optional().default(""),
@@ -103,6 +111,10 @@ export const isWebSearchConfigured = Boolean(
   env.GOOGLE_SEARCH_API_KEY &&
   env.GOOGLE_SEARCH_CX,
 );
+
+export const isUnsplashConfigured = Boolean(env.UNSPLASH_ACCESS_KEY);
+
+export const isRestCountriesConfigured = Boolean(env.REST_COUNTRIES_API_KEY);
 
 export const isStorageConfigured = Boolean(
   env.SUPABASE_SERVICE_ROLE_KEY && env.SUPABASE_URL,

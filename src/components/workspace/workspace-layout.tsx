@@ -7,6 +7,7 @@ import {
   Mic,
   Settings,
   Sparkles,
+  Gavel,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -27,6 +28,7 @@ import { AiCopilotPanel } from "@/components/workspace/ai-copilot-panel";
 import { WorkspaceSettings } from "@/components/workspace/workspace-settings";
 import { ExportButton } from "@/components/workspace/export-button";
 import { VoiceAgent } from "@/components/workspace/voice-agent";
+import { ResolutionBuilder } from "@/components/workspace/resolution-builder";
 import type { ConferenceOption } from "@/components/workspace/create-workspace-form";
 
 export interface WorkspaceData {
@@ -60,6 +62,7 @@ export function WorkspaceLayout({
   }[] = [
     { value: "overview", label: "Overview", icon: LayoutGrid },
     { value: "papers", label: "Position Papers", icon: FileText },
+    { value: "resolutions", label: "Resolution Builder", icon: Gavel },
     { value: "voice", label: "Voice Agent", icon: Mic },
     { value: "ai", label: "AI Copilot", icon: Sparkles },
     { value: "settings", label: "Settings", icon: Settings },
@@ -98,6 +101,9 @@ export function WorkspaceLayout({
             workspaceId={workspace.id}
             committees={workspace.committees}
           />
+        </TabsContent>
+        <TabsContent value="resolutions" className="mt-0">
+          <ResolutionBuilder />
         </TabsContent>
         <TabsContent value="voice" className="mt-0">
           <VoiceAgent />

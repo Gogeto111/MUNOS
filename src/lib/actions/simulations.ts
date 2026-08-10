@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/prisma";
 import { ok, fail, type ActionState } from "@/lib/actions";
 import { generateObject } from "ai";
-import { getBestModel } from "@/lib/ai-model";
+import { getBestObjectModel } from "@/lib/ai-model";
 
 const SimulationInputSchema = z.object({
   conferenceId: z.string().min(1),
@@ -124,7 +124,7 @@ async function generateAIResponse(
 
   try {
     const { object } = await generateObject({
-      model: getBestModel(),
+      model: getBestObjectModel(),
       schema: responseSchema,
       prompt,
     });

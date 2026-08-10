@@ -2,6 +2,7 @@ import { AppHeader } from "@/components/app/app-header";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { MobileNav } from "@/components/app/mobile-nav";
 import { Footer } from "@/components/shared/footer";
+import { FloatingTimer } from "@/components/shared/floating-timer";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 
 export default function AppLayout({
@@ -21,6 +22,7 @@ export default function AppLayout({
           <Footer />
         </div>
         <MobileNav />
+        <FloatingTimer />
       </div>
     </ThemeProvider>
   );

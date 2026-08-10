@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Loader2, FileText, ArrowRight, Copy, Check, Download, Search, X } from "lucide-react";
+import { Loader2, FileText, ArrowRight, Search, X, Check, Copy, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -66,8 +66,8 @@ export function ResearchAgent() {
   const [loading, setLoading] = useState(false);
   const [dossier, setDossier] = useState<ResearchDossier | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const [search, setSearch] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const sectionMatches = useMemo(() => {
     if (!search.trim() || !dossier) return null;
@@ -126,7 +126,19 @@ export function ResearchAgent() {
   };
 
   const exportMarkdown = () => {
-    if (!dossier) return;
+    const md = dossierToMarkdown();
+    if (!md) return;
+    const blob = new Blob([md], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `research-${country}-${committee}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const dossierToMarkdown = (): string => {
+    if (!dossier) return "";
     const lines: string[] = [];
     const h1 = (t: string) => lines.push(`# ${t}\n`);
     const h2 = (t: string) => lines.push(`## ${t}\n`);
@@ -231,14 +243,11 @@ export function ResearchAgent() {
     h2("Sources");
     dossier.sources.forEach((s) => li(`[${s.title}](${s.url}) — ${s.organization} — Tier ${s.tier}`));
 
-    const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `dossier-${country.toLowerCase().replace(/\s+/g, "-")}-${committee.toLowerCase().replace(/\s+/g, "-")}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
+    return lines.join("\n");
   };
+
+  const dossierFilename = () =>
+    `dossier-${country.toLowerCase().replace(/\s+/g, "-")}-${committee.toLowerCase().replace(/\s+/g, "-")}`;
 
   return (
     <div className="space-y-6">

@@ -1,7 +1,7 @@
 "use server";
 
 import { generateObject } from "ai";
-import { getBestModel } from "@/lib/ai-model";
+import { getBestObjectModel } from "@/lib/ai-model";
 import { isAiConfigured, isWebSearchConfigured } from "@/lib/env";
 import { performWebSearch, type GoogleSearchResult } from "@/lib/actions/web-search";
 import type { ResearchDossier } from "@/lib/actions/research-dossier-types";
@@ -168,7 +168,7 @@ export async function generateResearchDossier(
     }
 
     const result = await generateObject({
-      model: getBestModel(),
+      model: getBestObjectModel(),
       schema: DossierSchema,
       prompt: `You are MUNOS AI Research Agent — a specialized research system for Model United Nations.
 

@@ -1,7 +1,7 @@
 "use server";
 
 import { generateObject } from "ai";
-import { getBestModel } from "@/lib/ai-model";
+import { getBestObjectModel } from "@/lib/ai-model";
 import { z } from "zod";
 import { ok, toActionError, type ActionState } from "@/lib/actions";
 import { isAiConfigured } from "@/lib/env";
@@ -52,7 +52,7 @@ export async function generateCountryBrief(
 
   try {
     const result = await generateObject({
-      model: getBestModel(),
+      model: getBestObjectModel(),
       schema: CountryBriefSchema,
       prompt: `You are an expert MUN diplomatic analyst. Generate a comprehensive country position brief for ${country} in the ${committee} committee on the following topic:
 

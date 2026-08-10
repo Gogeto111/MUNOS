@@ -6,7 +6,9 @@ import { createGroq } from "@ai-sdk/groq";
 import { env, isAiConfigured, isGroqConfigured, isOpenAiConfigured, isAnthropicConfigured, isNvidiaConfigured } from "@/lib/env";
 
 // ---------------------------------------------------------------------------
-// Shared AI model getter — Groq (fastest, free) → NVIDIA (free) → Gemini → OpenAI → Anthropic
+// Shared AI model getters
+// Groq & NVIDIA: fast, free, text-only (no structured output / generateObject)
+// Gemini, OpenAI, Anthropic: support generateObject with json_schema
 // ---------------------------------------------------------------------------
 
 let _groq: ReturnType<typeof createGroq> | null = null;
@@ -26,8 +28,7 @@ function getNvidia() {
 }
 
 /**
- * Get the best available AI model.
- * Priority: Groq (fastest, free) → NVIDIA NIM (free) → Gemini → OpenAI → Anthropic
+ * Best model for generateText — Groq (fastest, free) → NVIDIA → Gemini → OpenAI → Anthropic
  */
 export function getBestModel(): LanguageModel {
   if (isGroqConfigured) return getGroq()("llama-3.3-70b-versatile");
@@ -36,6 +37,20 @@ export function getBestModel(): LanguageModel {
   if (isOpenAiConfigured) return createOpenAI({ apiKey: env.OPENAI_API_KEY })("gpt-4o");
   if (isAnthropicConfigured) return anthropic("claude-sonnet-4-20250514");
   throw new Error("No AI provider configured. Add GROQ_API_KEY or NVIDIA_API_KEY to .env (both free, no credit card).");
+}
+
+/**
+ * Best model for generateObject (structured output with json_schema).
+ * Groq & NVIDIA do NOT support json_schema — skip them.
+ * Priority: Gemini → OpenAI → Anthropic
+ */
+export function getBestObjectModel(): LanguageModel {
+  if (isAiConfigured) return google(env.AI_MODEL || "gemini-2.5-flash");
+  if (isOpenAiConfigured) return createOpenAI({ apiKey: env.OPENAI_API_KEY })("gpt-4o");
+  if (isAnthropicConfigured) return anthropic("claude-sonnet-4-20250514");
+  if (isGroqConfigured) return getGroq()("llama-3.3-70b-versatile");
+  if (isNvidiaConfigured) return getNvidia()("nvidia/llama-3.3-nemotron-super-49b-v1");
+  throw new Error("No AI provider configured.");
 }
 
 /**

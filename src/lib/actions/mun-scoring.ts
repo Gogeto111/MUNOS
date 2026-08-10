@@ -1,7 +1,7 @@
 "use server";
 
 import { generateObject } from "ai";
-import { getBestModel } from "@/lib/ai-model";
+import { getBestObjectModel } from "@/lib/ai-model";
 import { z } from "zod";
 import { isAiConfigured } from "@/lib/env";
 import { getDb } from "@/lib/prisma";
@@ -64,7 +64,7 @@ export async function scoreDelegatePerformance(
 
   try {
     const result = await generateObject({
-      model: getBestModel(),
+      model: getBestObjectModel(),
       schema: MunScoreSchema,
       prompt: `You are an expert MUN scoring judge. Evaluate this delegate's performance.
 

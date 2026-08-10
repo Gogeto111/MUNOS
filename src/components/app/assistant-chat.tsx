@@ -206,7 +206,10 @@ export function AssistantChat() {
   }, [chats, initialized]);
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = messagesEndRef.current?.closest('.overflow-y-auto');
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    }
   }, []);
 
   useEffect(() => {

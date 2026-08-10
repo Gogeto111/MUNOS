@@ -1,7 +1,7 @@
 "use server";
 
 import { generateObject } from "ai";
-import { getBestModel } from "@/lib/ai-model";
+import { getBestObjectModel } from "@/lib/ai-model";
 import { z } from "zod";
 import { isAiConfigured, isWebSearchConfigured } from "@/lib/env";
 import { performWebSearch } from "@/lib/actions/web-search";
@@ -59,7 +59,7 @@ Please incorporate information from these recent sources into your analysis wher
     }
 
     const result = await generateObject({
-      model: getBestModel(),
+      model: getBestObjectModel(),
       schema: PositionPaperSchema,
       prompt: `You are an expert MUN (Model United Nations) assistant. Generate a formal position paper for a delegate representing ${country} in the ${committee} committee on the topic: ${topic}.
 

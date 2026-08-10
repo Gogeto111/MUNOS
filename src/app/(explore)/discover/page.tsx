@@ -25,6 +25,8 @@ import {
   type ConferenceCardData,
 } from "@/lib/conference";
 import { cn } from "@/lib/utils";
+import { isUnsplashConfigured } from "@/lib/env";
+import { searchConferencePhotos } from "@/lib/unsplash";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -138,6 +140,15 @@ function activeChips(filters: DiscoverFilters): ActiveChip[] {
   return chips;
 }
 
+async function getFeaturedPhotos() {
+  if (!isUnsplashConfigured) return [];
+  try {
+    return await searchConferencePhotos("model united nations conference", 4);
+  } catch {
+    return [];
+  }
+}
+
 export default async function DiscoverPage({
   searchParams,
 }: {
@@ -145,9 +156,10 @@ export default async function DiscoverPage({
 }) {
   const raw = await searchParams;
   const filters = parseDiscoverFilters(toSearchParams(raw));
-  const [facets, { where, orderBy }] = await Promise.all([
+  const [facets, { where, orderBy }, featuredPhotos] = await Promise.all([
     loadFacets(),
     buildConferenceQuery(filters),
+    getFeaturedPhotos(),
   ]);
 
   const conferences = (await getDb().conference.findMany({
@@ -184,6 +196,42 @@ export default async function DiscoverPage({
           </div>
         </Container>
       </section>
+
+      {featuredPhotos.length > 0 && (
+        <Container className="mt-10">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Featured Photos</h2>
+              <p className="text-sm text-muted-foreground">Moments from MUN conferences around the world</p>
+            </div>
+            <p className="text-[11px] text-muted-foreground/60">Photos by Unsplash</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {featuredPhotos.map((photo: { id: string; thumb: string; alt: string; photographer: string; photographerUrl: string }) => (
+              <div key={photo.id} className="group relative overflow-hidden rounded-xl">
+                <div className="aspect-[3/2] overflow-hidden">
+                  <img
+                    src={photo.thumb}
+                    alt={photo.alt}
+                    className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-2">
+                  <a
+                    href={`https://unsplash.com/${photo.photographerUrl}?utm_source=MUNOS&utm_medium=referral`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] font-medium text-white/80 hover:text-white"
+                  >
+                    {photo.photographer}
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Container>
+      )}
 
       <Container className="mt-8">
         {chips.length > 0 ? (

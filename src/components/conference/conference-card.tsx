@@ -28,6 +28,7 @@ export function ConferenceCard({
   index?: number;
 }) {
   const image = conference.bannerUrl || conference.logoUrl;
+  const isUnsplashPhoto = image?.includes("images.unsplash.com");
 
   return (
     <motion.div
@@ -97,6 +98,16 @@ export function ConferenceCard({
             <span className="truncate font-medium drop-shadow">
               {derived.locationLabel}
             </span>
+            {isUnsplashPhoto && (
+              <a
+                href="https://unsplash.com?utm_source=MUNOS&utm_medium=referral"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-auto shrink-0 text-[9px] font-medium text-white/60 hover:text-white/90"
+              >
+                Unsplash
+              </a>
+            )}
           </div>
         </div>
 
