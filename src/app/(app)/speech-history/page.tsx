@@ -8,6 +8,7 @@ import {
   Filter,
   Loader2,
   Trophy,
+  Mic,
 } from "lucide-react";
 import {
   getSpeechHistory,
@@ -285,12 +286,24 @@ export default function SpeechHistoryPage() {
       {/* Speech List */}
       {filtered.length === 0 ? (
         <Card>
-          <CardContent className="py-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              {speeches.length === 0
-                ? "No speeches scored yet. Try the AI Judge in your workspace to get started."
-                : "No speeches match the current filter."}
-            </p>
+          <CardContent className="py-12 text-center">
+            <div className="flex flex-col items-center gap-3">
+              <div className="rounded-full bg-muted p-3">
+                <Mic className="size-6 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">
+                  {speeches.length === 0
+                    ? "No speeches scored yet"
+                    : "No speeches match the current filter"}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {speeches.length === 0
+                    ? "Try the AI Judge in your workspace to get started."
+                    : "Try adjusting your filter criteria."}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       ) : (

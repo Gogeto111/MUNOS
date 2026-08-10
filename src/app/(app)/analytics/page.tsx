@@ -96,7 +96,7 @@ export default async function AnalyticsPage() {
       committee: [...c.committees.entries()].sort(
         (a, b) => b[1] - a[1],
       )[0]?.[0] || "General",
-      speakingMinutes: c.speakingMinutes || Math.floor(Math.random() * 30) + 10,
+      speakingMinutes: c.speakingMinutes || 0,
     }));
 
     // Score data for line chart fallback
@@ -126,7 +126,7 @@ export default async function AnalyticsPage() {
     for (const c of committees) {
       speakingMap.set(
         c.name,
-        (speakingMap.get(c.name) || 0) + (Math.floor(Math.random() * 20) + 5),
+        (speakingMap.get(c.name) || 0),
       );
     }
     const speakingData = [...speakingMap.entries()]

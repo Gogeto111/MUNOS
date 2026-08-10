@@ -41,16 +41,14 @@ export function getBestModel(): LanguageModel {
 
 /**
  * Best model for generateObject (structured output with json_schema).
- * Groq & NVIDIA do NOT support json_schema — skip them.
+ * Groq & NVIDIA do NOT support json_schema — never use them here.
  * Priority: Gemini → OpenAI → Anthropic
  */
 export function getBestObjectModel(): LanguageModel {
   if (isAiConfigured) return google(env.AI_MODEL || "gemini-2.5-flash");
   if (isOpenAiConfigured) return createOpenAI({ apiKey: env.OPENAI_API_KEY })("gpt-4o");
   if (isAnthropicConfigured) return anthropic("claude-sonnet-4-20250514");
-  if (isGroqConfigured) return getGroq()("llama-3.3-70b-versatile");
-  if (isNvidiaConfigured) return getNvidia()("nvidia/llama-3.3-nemotron-super-49b-v1");
-  throw new Error("No AI provider configured.");
+  throw new Error("No AI provider supports structured output. Add GOOGLE_GENERATIVE_AI_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY to .env");
 }
 
 /**

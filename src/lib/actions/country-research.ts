@@ -4,7 +4,7 @@ import { generateObject } from "ai";
 import { getBestObjectModel } from "@/lib/ai-model";
 import { z } from "zod";
 import { ok, toActionError, type ActionState } from "@/lib/actions";
-import { isAiConfigured, isRestCountriesConfigured } from "@/lib/env";
+import { env, isAiConfigured, isRestCountriesConfigured } from "@/lib/env";
 
 const CountryProfileSchema = z.object({
   name: z.string().describe("Full country name"),
@@ -52,7 +52,7 @@ async function fetchRestCountryData(name: string): Promise<RestCountryData | nul
   try {
     const res = await fetch(
       `https://api.restcountries.com/countries/v5/name/${encodeURIComponent(name)}?fields=name,capital,population,region,subregion,currencies,languages,flags,unMember,cca2`,
-      { headers: { Authorization: `Bearer ${process.env.REST_COUNTRIES_API_KEY}` }, next: { revalidate: 3600 } }
+      { headers: { Authorization: `Bearer ${env.REST_COUNTRIES_API_KEY}` }, next: { revalidate: 3600 } }
     );
     if (!res.ok) return null;
     const data = await res.json();

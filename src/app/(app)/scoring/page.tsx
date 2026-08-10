@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   Loader2, Trophy, TrendingUp, Target, Star, Camera, FileVideo,
-  ArrowLeft, BarChart3, Award, GitCompareArrows, Sparkles,
+  ArrowLeft, BarChart3, Award, GitCompareArrows, Sparkles, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -152,6 +152,8 @@ export default function PerformancePage() {
   const [editGoals, setEditGoals] = useState(false);
   const [scoreLog, setScoreLog] = useState<ScoreLog[]>([]);
 
+  const [pageLoading, setPageLoading] = useState(true);
+
   // Coach state
   const [coachSessions, setCoachSessions] = useState<SessionSummary[]>([]);
   const [coachView, setCoachView] = useState<"list" | "detail" | "compare">("list");
@@ -170,6 +172,7 @@ export default function PerformancePage() {
     setScoreLog(loadScoreLog());
     listVideoCoachSessions().then((r) => {
       if (r.status === "success" && r.data) setCoachSessions(r.data);
+      setPageLoading(false);
     });
   }, []);
 
@@ -250,6 +253,39 @@ export default function PerformancePage() {
           Score speeches, track progress, analyze delivery, and compare sessions.
         </p>
       </div>
+
+      {pageLoading && (
+        <div className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            {[1, 2].map((i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="h-3 w-full animate-pulse rounded bg-muted" />
+                  <div className="h-20 w-full animate-pulse rounded bg-muted" />
+                  <div className="h-9 w-full animate-pulse rounded bg-muted" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="grid gap-6 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <div className="h-4 w-28 animate-pulse rounded bg-muted" />
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {[1, 2, 3].map((j) => (
+                    <div key={j} className="h-3 w-full animate-pulse rounded bg-muted" />
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── INPUT SECTION ── */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -424,6 +460,23 @@ export default function PerformancePage() {
       )}
 
       {/* ── RECENT SPEECH SESSIONS ── */}
+      {coachView === "list" && coachSessions.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <div className="flex flex-col items-center gap-3">
+              <div className="rounded-full bg-muted p-3">
+                <FileText className="size-6 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">No speech analyses yet</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Paste a transcript in the Speech Analysis card above to get AI feedback on your delivery.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       {coachView === "list" && coachSessions.length > 0 && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -541,6 +594,23 @@ export default function PerformancePage() {
       {/* ── SCORE HISTORY + BENCHMARKS + ACHIEVEMENTS ── */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Score History Chart */}
+        {scoreLog.length === 0 && (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <div className="flex flex-col items-center gap-3">
+                <div className="rounded-full bg-muted p-3">
+                  <TrendingUp className="size-6 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">No score history yet</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Score a performance above to start tracking your progress over time.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         {scoreLog.length > 0 && (
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><TrendingUp className="size-4" /> Score History</CardTitle></CardHeader>

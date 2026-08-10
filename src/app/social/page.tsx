@@ -3,16 +3,59 @@
 import { useState } from "react";
 import {
   MessageSquare,
+  LogIn,
 } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { SocialFeed } from "@/components/social/social-feed";
 import { ActivityStats } from "@/components/social/activity-stats";
 import { TrendingTopics } from "@/components/social/trending-topics";
 import { SuggestedUsers } from "@/components/social/suggested-users";
+import Link from "next/link";
 
 export default function SocialPage() {
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
+  const { isLoaded, isSignedIn } = useUser();
+
+  if (isLoaded && !isSignedIn) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+        <div className="mx-auto max-w-6xl px-4 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tight">MUN Social</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Share research, insights, and questions with the MUN community.
+            </p>
+          </div>
+          <Card>
+            <CardContent className="py-16 text-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="rounded-full bg-muted p-4">
+                  <LogIn className="size-8 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-lg font-semibold">Sign in to continue</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Join the MUN community to share posts, follow delegates, and trending topics.
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <Link href="/sign-in">
+                    <Button>Sign In</Button>
+                  </Link>
+                  <Link href="/sign-up">
+                    <Button variant="outline">Get Started</Button>
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { ResolutionBuilder } from "@/components/workspace/resolution-builder";
-import { Button } from "@/components/ui/button";
 
 export const metadata = { title: "Resolution Builder | MUNOS" };
 

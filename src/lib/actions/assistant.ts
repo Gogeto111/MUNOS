@@ -8,9 +8,7 @@ import { getMemoryContextString } from "@/lib/actions/ai-memory";
 async function withFallback<T>(
   fn: (model: LanguageModel) => Promise<T>,
 ): Promise<T> {
-  const model = getBestModel();
-  if (!model) throw new Error("No AI provider configured. Add GROQ_API_KEY or NVIDIA_API_KEY to your .env (both free, no credit card).");
-  return fn(model);
+  return fn(getBestModel());
 }
 
 // ---------------------------------------------------------------------------

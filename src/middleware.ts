@@ -18,6 +18,23 @@ const isProtectedRoute = createRouteMatcher([
   "/marketplace(.*)",
   "/organizer(.*)",
   "/workspaces(.*)",
+  "/ai(.*)",
+  "/research(.*)",
+  "/research-agent(.*)",
+  "/country-research(.*)",
+  "/workspace(.*)",
+  "/blocs(.*)",
+  "/analytics(.*)",
+  "/chair(.*)",
+  "/onboarding(.*)",
+  "/resolution-builder(.*)",
+  "/scoring(.*)",
+  "/speech-history(.*)",
+  "/situation-room(.*)",
+  "/debate-practice(.*)",
+  "/tips(.*)",
+  "/resources(.*)",
+  "/resolutions(.*)",
 ]);
 
 const hasClerkKeys = Boolean(

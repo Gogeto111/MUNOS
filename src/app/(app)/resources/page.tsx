@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Search,
   ExternalLink,
@@ -121,15 +121,15 @@ export default function ResourcesPage() {
   const [selectedCategory, setSelectedCategory] =
     useState<ResourceCategory | "All">("All");
   const [selectedType, setSelectedType] = useState<ResourceType | "All">("All");
-  const [bookmarked, setBookmarked] = useState<Set<string>>(() => {
+  const [bookmarked, setBookmarked] = useState<Set<string>>(new Set());
+  const [showBookmarked, setShowBookmarked] = useState(false);
+
+  useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
-  const [showBookmarked, setShowBookmarked] = useState(false);
+      if (stored) setBookmarked(new Set(JSON.parse(stored)));
+    } catch {}
+  }, []);
 
   const toggleBookmark = (id: string) => {
     setBookmarked((prev) => {

@@ -17,7 +17,16 @@ export default function OnboardingPage() {
     }
   }, [router]);
 
-  if (!checked) return null;
+  if (!checked) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto size-8 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+          <p className="mt-3 text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return <OnboardingWizard />;
 }
