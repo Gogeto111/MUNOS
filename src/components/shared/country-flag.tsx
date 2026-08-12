@@ -36,7 +36,7 @@ export function CountryFlag({
   }
 
   const emojiFlag = country ? getCountryFlag(country) : "🏳️";
-  const { w, h, label } = FLAG_CDN_SIZES[size];
+  const { w, h } = FLAG_CDN_SIZES[size];
   const flagUrl = iso ? `/flags/${iso.toLowerCase()}.png` : null;
   const showImage = flagUrl && !imgFailed;
 

@@ -28,6 +28,7 @@ export async function POST(req: Request) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: upstreamForm,
+      signal: AbortSignal.timeout(60_000),
     });
 
     if (!response.ok) {

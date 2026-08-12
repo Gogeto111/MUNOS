@@ -60,7 +60,7 @@ export async function performWebSearch(
     url.searchParams.set("num", numResults.toString());
     
     // Perform the search request
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), { signal: AbortSignal.timeout(10_000) });
     
     if (!response.ok) {
       const errorText = await response.text();

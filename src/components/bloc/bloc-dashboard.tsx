@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -39,7 +39,6 @@ import {
   joinBloc,
   getCountryAssignments,
 } from "@/lib/bloc-store";
-import { getCountryFlag } from "@/lib/country-flags";
 import { BlocCard } from "./bloc-card";
 import { CountryAssignmentView } from "./country-assignment";
 

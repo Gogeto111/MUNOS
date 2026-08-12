@@ -1,7 +1,5 @@
 "use server";
 
-import { isRestCountriesConfigured } from "@/lib/env";
-
 export interface RestCountryData {
   name: { common: string; official: string };
   capital?: string[];
@@ -16,11 +14,10 @@ export interface RestCountryData {
 }
 
 export async function fetchRestCountryData(name: string): Promise<RestCountryData | null> {
-  if (!isRestCountriesConfigured) return null;
   try {
     const res = await fetch(
       `https://api.restcountries.com/countries/v5/name/${encodeURIComponent(name)}?fields=name,capital,population,region,subregion,currencies,languages,flags,unMember,cca2`,
-      { headers: { Authorization: `Bearer ${process.env.REST_COUNTRIES_API_KEY}` }, next: { revalidate: 3600 } }
+      { next: { revalidate: 3600 }, signal: AbortSignal.timeout(10_000) }
     );
     if (!res.ok) return null;
     const data = await res.json();

@@ -80,7 +80,7 @@ export function AgendaView({ items }: { items: AgendaItem[] }) {
       {selectedDay && (
         <div className="relative space-y-0">
           <div className="absolute left-[15px] top-0 bottom-0 w-px bg-border/70 print:left-[11px]" />
-          {(grouped.get(selectedDay) ?? []).map((item, i) => (
+          {(grouped.get(selectedDay) ?? []).map((item) => (
             <div key={item.id} className="relative flex gap-4 py-4 print:py-3">
               <div
                 className={cn(

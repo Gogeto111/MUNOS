@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Bloc } from "@/lib/bloc-types";
 import { addBlocMessage } from "@/lib/bloc-store";
 

@@ -37,7 +37,6 @@ export function SessionMemory() {
   const ctx = useMunContext();
   const [filter, setFilter] = useState<FilterType>("all");
   const [search, setSearch] = useState("");
-  const [newNote, setNewNote] = useState("");
   const [quickNote, setQuickNote] = useState("");
 
   const events = ctx.events

@@ -11,7 +11,7 @@ export async function getSystemStatus(): Promise<
     const checks: Array<{ name: string; status: string; color: string }> = [];
 
     // Check AI Engine
-    const hasAI = !!process.env.AI_MODEL || !!process.env.GEMINI_API_KEY;
+    const hasAI = !!process.env.GOOGLE_GENERATIVE_AI_API_KEY || !!process.env.GROQ_API_KEY;
     checks.push({
       name: "AI Engine",
       status: hasAI ? "Online" : "Not configured",

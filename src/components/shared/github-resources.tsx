@@ -16,7 +16,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   searchMUNRepos,
-  searchMUNGuides,
 } from "@/lib/actions/github-search";
 
 interface Repo {
@@ -94,7 +93,7 @@ export function GitHubResources() {
   const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
-    searchMUNGuides(6).then((results) => {
+    searchMUNRepos("MUN guide", 6).then((results) => {
       setPopular(results);
       setInitialLoading(false);
     });
